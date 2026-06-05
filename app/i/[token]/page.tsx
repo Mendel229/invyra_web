@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-
 import { supabase } from "@/lib/supabase"; 
 
 import AnniversaireFeteColoree from "@/components/templates/anniversaire/AnniversaireFeteColoree";
@@ -19,16 +18,21 @@ interface PageProps {
 }
 
 export default async function InvitationPage({ params }: PageProps) {
-  const { token } = await params;
+  const { token } = await params; // Ici, 'token' correspond au 'public_token' de la table invitations
 
-  // 1. RÉCUPÉRATION DE L'INVITATION ET DE SON ÉVÉNEMENT AVEC LE TEMPLATE
-  // (Plus besoin de faire "await createClient()", on utilise directement "supabase")
-  const { data: invitation, error } = await supabase
-    .from("event_guests")
+  // 1. RÉCUPÉRATION DE L'INVITATION VIA public_token, avec join vers qr_codes, guests et events
+  const { data: invitationRecord, error } = await supabase
+    .from("invitations")
     .select(`
       id,
-      guest_name,
       status,
+      public_token,
+      qr_codes (
+        code
+      ),
+      guests (
+        full_name
+      ),
       events (
         id,
         name,
@@ -42,16 +46,23 @@ export default async function InvitationPage({ params }: PageProps) {
         )
       )
     `)
-    .eq("token", token)
+    .eq("public_token", token)
     .single();
 
-  // Si l'invitation n'existe pas ou qu'il y a une erreur, on renvoie une 404
-  if (error || !invitation || !invitation.events) {
+  // Si le token n'existe pas ou qu'il y a une erreur, on renvoie une 404
+  if (error || !invitationRecord || !(invitationRecord as any).events) {
     notFound();
   }
 
-  const event = invitation.events as any;
+  const invitation = invitationRecord as any;
+  const event = invitation.events;
+  const guest = invitation.guests;
   const templateKey = event.event_templates?.web_template_key;
+
+  // Le code QR vient du join qr_codes — peut être null si pas encore généré
+  const qrCode = Array.isArray(invitation.qr_codes)
+    ? invitation.qr_codes[0]?.code ?? null
+    : invitation.qr_codes?.code ?? null;
 
   // 2. ADAPTATEUR / FORMATAGE DES DONNÉES UNIFIÉES
   const dateObj = new Date(event.event_date);
@@ -64,6 +75,9 @@ export default async function InvitationPage({ params }: PageProps) {
     date: dateObj.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
     heure: dateObj.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
     
+    // CODE UNIQUE REQUIS POUR GÉNÉRER LE QR CODE DANS LE TEMPLATE
+    qrCodeCode: qrCode,
+    
     // Métadonnées pour les champs personnalisés
     metadata: event.metadata || {},
     customField1Label: event.metadata?.customField1Label,
@@ -72,17 +86,16 @@ export default async function InvitationPage({ params }: PageProps) {
     customField2Value: event.metadata?.customField2Value,
   };
 
-  // 3. SERVER ACTION CORRIGÉE
+  // 3. SERVER ACTION POUR LA CONFIRMATION (RSVP)
   const handleConfirm = async (status: "accepted" | "declined", comment?: string) => {
     "use server";
     
-    // On réutilise directement la même instance globale
     await supabase
-      .from("event_guests")
+      .from("invitations")
       .update({ 
         status: status,
       })
-      .eq("token", token);
+      .eq("id", invitation.id);
   };
 
   // 4. RENDU DYNAMIQUE DU TEMPLATE
@@ -90,52 +103,52 @@ export default async function InvitationPage({ params }: PageProps) {
     <>
       {/* Anniversaires */}
       {templateKey === "anniversaire-colore" && (
-        <AnniversaireFeteColoree data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <AnniversaireFeteColoree data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "neon-birthday" && (
-        <AnniversaireNeonBirthday data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <AnniversaireNeonBirthday data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
 
       {/* Autre */}
       {templateKey === "simple-other" && (
-        <TemplateSimpleOther data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <TemplateSimpleOther data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
 
       {/* Baptêmes */}
       {templateKey === "bapteme-celeste" && (
-        <BaptemeDouceurCeleste data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <BaptemeDouceurCeleste data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "sacred-lilies" && (
-        <BaptemeSacredLilies data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <BaptemeSacredLilies data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
 
       {/* Corporate */}
       {templateKey === "african-tech" && (
-        <CorporateAfricanTech data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <CorporateAfricanTech data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "executive-summit" && (
-        <CorporateExecutiveSummit data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <CorporateExecutiveSummit data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
 
       {/* Mariages */}
       {templateKey === "mariage-dore" && (
-        <MariageEleganceDoree data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <MariageEleganceDoree data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "midnight-romance" && (
-        <MariageMidnightRomance data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <MariageMidnightRomance data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
 
       {/* Soirées VIP */}
       {templateKey === "golden-gala" && (
-        <SoireeGoldenGala data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <SoireeGoldenGala data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "midnight-accra" && (
-        <SoireeMidnightAccra data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <SoireeMidnightAccra data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
 
       {/* Sécurité */}
       {!templateKey && (
-        <TemplateSimpleOther data={formattedData} guestName={invitation.guest_name} onConfirmParams={handleConfirm} />
+        <TemplateSimpleOther data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
       )}
     </>
   );
