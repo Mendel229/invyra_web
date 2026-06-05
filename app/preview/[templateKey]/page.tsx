@@ -14,15 +14,22 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     notFound();
   }
 
-  // Fausses données premium pour la démonstration dans l'application mobile
+  
   const demoData = {
-    nomEvenement: "Mariage de Démonstration",
-    eventType: "mariage",
+    name: "Mariage de Démonstration",
+    event_type: "mariage" as const, 
+    event_date: "2026-10-24T18:00:00Z",
     date: "Samedi 24 Octobre 2026",
     heure: "18h00",
-    lieu: "Hôtel Azalaï, Salon Prestige",
+    place: "Hôtel Azalaï, Salon Prestige",
     nomCouple: "Mariame & Ibrahim",
-    message: "Ceci est un aperçu en temps réel de votre invitation haut de gamme.",
+    description: "Ceci est un aperçu en temps réel de votre invitation haut de gamme.",
+    logoUrl: undefined,
+    qrCodeUrl: undefined,
+    metadata: {
+      customField1Label: "Dress Code",
+      customField1Value: "Blanc et Doré",
+    }
   };
 
   // Action RSVP vide pour le mode Démo (on ne veut pas écrire en base lors d'un simple aperçu)
@@ -35,8 +42,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     <MariageEleganceDoree
       data={demoData}
       guestName="Invité Démo (Exemple)"
-      token="PREVIEW_MODE_TOKEN"
-      onConfirm={handleDemoConfirm}
+      onConfirmParams={handleDemoConfirm}
     />
   );
 }
