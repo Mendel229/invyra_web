@@ -24,13 +24,6 @@ interface PageProps {
 export default async function InvitationPage({ params }: PageProps) {
   const { token } = await params;
 
-  // DEBUG: vérifier que les variables d'env sont bien chargées
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const supaUrl = process.env.SUPABASE_URL;
-  console.log('[InvitationPage] SUPABASE_URL defined:', !!supaUrl, '| url:', supaUrl?.substring(0, 30));
-  console.log('[InvitationPage] SERVICE_ROLE_KEY defined:', !!serviceKey, '| length:', serviceKey?.length ?? 0, '| starts:', serviceKey?.substring(0, 10));
-  console.log('[InvitationPage] token:', token);
-
   // 1. Récupérer l'invitation via public_token (sans joins pour éviter les ambiguïtés PostgREST)
   const { data: invitationRecord, error: invError } = await supabaseAdmin
     .from("invitations")
@@ -38,11 +31,7 @@ export default async function InvitationPage({ params }: PageProps) {
     .eq("public_token", token)
     .maybeSingle();
 
-  console.log('[InvitationPage] invitations result:', JSON.stringify(invitationRecord), '| error:', JSON.stringify(invError));
-  console.log('[InvitationPage] token length:', token.length, '| charCodes:', [...token].map(c => c.charCodeAt(0)).join(','));
-
   if (invError || !invitationRecord) {
-    console.error('[InvitationPage] invitations query error:', JSON.stringify(invError), '| token:', token);
     notFound();
   }
 
@@ -62,7 +51,7 @@ export default async function InvitationPage({ params }: PageProps) {
 
     supabaseAdmin
       .from("events")
-      .select("id, name, event_type, event_date, place, description, metadata, template_id")
+      .select("id, name, event_type, event_date, place, description, metadata, template_id, logo_url")
       .eq("id", invitationRecord.event_id)
       .single(),
   ]);
@@ -88,6 +77,11 @@ export default async function InvitationPage({ params }: PageProps) {
 
   // 4. FORMATAGE DES DONNÉES
   const dateObj = new Date(event.event_date);
+
+  // Générer l'URL de l'image QR à partir du code hexadécimal
+  const qrCodeUrl = qrCode
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrCode}&format=png&margin=4`
+    : null;
   
   const formattedData = {
     name: event.name,
@@ -97,6 +91,8 @@ export default async function InvitationPage({ params }: PageProps) {
     date: dateObj.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
     heure: dateObj.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
     qrCodeCode: qrCode,
+    qrCodeUrl: qrCodeUrl,           // URL image QR pour les templates
+    logoUrl: event.logo_url ?? null, // Logo de l'événement
     metadata: event.metadata || {},
     customField1Label: event.metadata?.customField1Label,
     customField1Value: event.metadata?.customField1Value,
