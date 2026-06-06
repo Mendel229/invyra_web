@@ -20,6 +20,13 @@ interface PageProps {
 export default async function InvitationPage({ params }: PageProps) {
   const { token } = await params;
 
+  // DEBUG: vérifier que les variables d'env sont bien chargées
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supaUrl = process.env.SUPABASE_URL;
+  console.log('[InvitationPage] SUPABASE_URL defined:', !!supaUrl);
+  console.log('[InvitationPage] SERVICE_ROLE_KEY defined:', !!serviceKey, '| length:', serviceKey?.length ?? 0);
+  console.log('[InvitationPage] token:', token);
+
   // 1. Récupérer l'invitation via public_token (sans joins pour éviter les ambiguïtés PostgREST)
   const { data: invitationRecord, error: invError } = await supabaseAdmin
     .from("invitations")
@@ -28,6 +35,7 @@ export default async function InvitationPage({ params }: PageProps) {
     .single();
 
   if (invError || !invitationRecord) {
+    console.error('[InvitationPage] invitations query error:', JSON.stringify(invError), '| token:', token);
     notFound();
   }
 
