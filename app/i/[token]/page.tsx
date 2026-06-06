@@ -35,6 +35,20 @@ export default async function InvitationPage({ params }: PageProps) {
     notFound();
   }
 
+  // Tracker la vue sans bloquer le rendu — fire and forget
+  const inv = invitationRecord!;
+  Promise.allSettled([
+    supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
+    inv.status === "brouillon"
+      ? supabaseAdmin
+          .from("invitations")
+          .update({ status: "envoye", viewed_at: new Date().toISOString() })
+          .eq("id", inv.id)
+          .eq("status", "brouillon")
+      : Promise.resolve(),
+    supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: inv.event_id }),
+  ]);
+
   // 2. Récupérer en parallèle : invité, QR code, et événement+template
   const [guestRes, qrRes, eventRes] = await Promise.all([
     supabaseAdmin
