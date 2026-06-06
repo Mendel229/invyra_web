@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 
+// Forcer le rendu dynamique — cette page ne doit jamais être mise en cache statique
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import AnniversaireFeteColoree from "@/components/templates/anniversaire/AnniversaireFeteColoree";
 import AnniversaireNeonBirthday from "@/components/templates/anniversaire/AnniversaireNeonBirthday";
 import TemplateSimpleOther from "@/components/templates/autre/TemplateSimpleOther";
