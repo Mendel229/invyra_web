@@ -18,53 +18,60 @@ interface PageProps {
 }
 
 export default async function InvitationPage({ params }: PageProps) {
-  const { token } = await params; // Ici, 'token' correspond au 'public_token' de la table invitations
+  const { token } = await params;
 
-  // 1. RÉCUPÉRATION DE L'INVITATION VIA public_token, avec join vers qr_codes, guests et events
-  const { data: invitationRecord, error } = await supabaseAdmin
+  // 1. Récupérer l'invitation via public_token (sans joins pour éviter les ambiguïtés PostgREST)
+  const { data: invitationRecord, error: invError } = await supabaseAdmin
     .from("invitations")
-    .select(`
-      id,
-      status,
-      public_token,
-      qr_codes (
-        code
-      ),
-      guests (
-        full_name
-      ),
-      events (
-        id,
-        name,
-        event_type,
-        event_date,
-        place,
-        description,
-        metadata,
-        event_templates (
-          web_template_key
-        )
-      )
-    `)
+    .select("id, status, public_token, event_id, guest_id")
     .eq("public_token", token)
     .single();
 
-  // Si le token n'existe pas ou qu'il y a une erreur, on renvoie une 404
-  if (error || !invitationRecord || !(invitationRecord as any).events) {
+  if (invError || !invitationRecord) {
     notFound();
   }
 
-  const invitation = invitationRecord as any;
-  const event = invitation.events;
-  const guest = invitation.guests;
-  const templateKey = event.event_templates?.web_template_key;
+  // 2. Récupérer en parallèle : invité, QR code, et événement+template
+  const [guestRes, qrRes, eventRes] = await Promise.all([
+    supabaseAdmin
+      .from("guests")
+      .select("full_name")
+      .eq("id", invitationRecord.guest_id)
+      .single(),
 
-  // Le code QR vient du join qr_codes — peut être null si pas encore généré
-  const qrCode = Array.isArray(invitation.qr_codes)
-    ? invitation.qr_codes[0]?.code ?? null
-    : invitation.qr_codes?.code ?? null;
+    supabaseAdmin
+      .from("qr_codes")
+      .select("code")
+      .eq("invitation_id", invitationRecord.id)
+      .maybeSingle(),
 
-  // 2. ADAPTATEUR / FORMATAGE DES DONNÉES UNIFIÉES
+    supabaseAdmin
+      .from("events")
+      .select("id, name, event_type, event_date, place, description, metadata, template_id")
+      .eq("id", invitationRecord.event_id)
+      .single(),
+  ]);
+
+  if (eventRes.error || !eventRes.data || guestRes.error || !guestRes.data) {
+    notFound();
+  }
+
+  const guest = guestRes.data;
+  const event = eventRes.data;
+  const qrCode = qrRes.data?.code ?? null;
+
+  // 3. Récupérer le template si event a un template_id
+  let templateKey: string | null = null;
+  if (event.template_id) {
+    const { data: templateData } = await supabaseAdmin
+      .from("event_templates")
+      .select("web_template_key")
+      .eq("id", event.template_id)
+      .single();
+    templateKey = templateData?.web_template_key ?? null;
+  }
+
+  // 4. FORMATAGE DES DONNÉES
   const dateObj = new Date(event.event_date);
   
   const formattedData = {
@@ -74,11 +81,7 @@ export default async function InvitationPage({ params }: PageProps) {
     description: event.description || "",
     date: dateObj.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
     heure: dateObj.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-    
-    // CODE UNIQUE REQUIS POUR GÉNÉRER LE QR CODE DANS LE TEMPLATE
     qrCodeCode: qrCode,
-    
-    // Métadonnées pour les champs personnalisés
     metadata: event.metadata || {},
     customField1Label: event.metadata?.customField1Label,
     customField1Value: event.metadata?.customField1Value,
@@ -87,15 +90,12 @@ export default async function InvitationPage({ params }: PageProps) {
   };
 
   // 3. SERVER ACTION POUR LA CONFIRMATION (RSVP)
-  const handleConfirm = async (status: "accepted" | "declined", comment?: string) => {
+  const handleConfirm = async (status: "accepted" | "declined", _comment?: string) => {
     "use server";
-    
     await supabaseAdmin
       .from("invitations")
-      .update({ 
-        status: status,
-      })
-      .eq("id", invitation.id);
+      .update({ status: status })
+      .eq("id", invitationRecord.id);
   };
 
   // 4. RENDU DYNAMIQUE DU TEMPLATE
