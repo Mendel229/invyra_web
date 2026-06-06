@@ -39,6 +39,7 @@ export default async function InvitationPage({ params }: PageProps) {
     .maybeSingle();
 
   console.log('[InvitationPage] invitations result:', JSON.stringify(invitationRecord), '| error:', JSON.stringify(invError));
+  console.log('[InvitationPage] token length:', token.length, '| charCodes:', [...token].map(c => c.charCodeAt(0)).join(','));
 
   if (invError || !invitationRecord) {
     console.error('[InvitationPage] invitations query error:', JSON.stringify(invError), '| token:', token);
