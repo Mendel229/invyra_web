@@ -91,8 +91,8 @@ export default async function InvitationPage({ params }: PageProps) {
     date: dateObj.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
     heure: dateObj.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
     qrCodeCode: qrCode,
-    qrCodeUrl: qrCodeUrl,           // URL image QR pour les templates
-    logoUrl: event.logo_url ?? null, // Logo de l'événement
+    qrCodeUrl: qrCodeUrl ?? undefined,   // URL image QR pour les templates
+    logoUrl: event.logo_url ?? undefined, // Logo de l'événement
     metadata: event.metadata || {},
     customField1Label: event.metadata?.customField1Label,
     customField1Value: event.metadata?.customField1Value,
