@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { supabase } from "@/lib/supabase"; 
+import { supabaseAdmin } from "@/lib/supabase";
 
 import AnniversaireFeteColoree from "@/components/templates/anniversaire/AnniversaireFeteColoree";
 import AnniversaireNeonBirthday from "@/components/templates/anniversaire/AnniversaireNeonBirthday";
@@ -21,7 +21,7 @@ export default async function InvitationPage({ params }: PageProps) {
   const { token } = await params; // Ici, 'token' correspond au 'public_token' de la table invitations
 
   // 1. RÉCUPÉRATION DE L'INVITATION VIA public_token, avec join vers qr_codes, guests et events
-  const { data: invitationRecord, error } = await supabase
+  const { data: invitationRecord, error } = await supabaseAdmin
     .from("invitations")
     .select(`
       id,
@@ -90,7 +90,7 @@ export default async function InvitationPage({ params }: PageProps) {
   const handleConfirm = async (status: "accepted" | "declined", comment?: string) => {
     "use server";
     
-    await supabase
+    await supabaseAdmin
       .from("invitations")
       .update({ 
         status: status,
