@@ -1,4 +1,5 @@
 "use client";
+import RSVPSection from "@/components/RSVPSection";
 
 import { useState, type MouseEvent } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export interface InvitationData {
 export interface TemplateProps {
   data: InvitationData;
   guestName: string;
+  initialStatus?: string;
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
@@ -106,7 +108,7 @@ export default function SoireeGoldenGala({ data, guestName, onConfirmParams }: T
             </div>
           )}
           {data.qrCodeUrl && <div className="mx-auto mt-6 h-24 w-24 rounded-2xl bg-white p-2"><img src={data.qrCodeUrl} alt="QR code" className="h-full w-full rounded-xl object-cover" /></div>}
-          <RSVPButtons onConfirmParams={onConfirmParams} />
+          <RSVPSection initialStatus={initialStatus ?? "brouillon"} onConfirm={onConfirmParams ?? (async () => {})} wrapperClassName="mt-7 grid grid-cols-2 gap-3" />
           <p className="mt-7 text-[10px] text-white/42">Créé avec INVYRA</p>
         </motion.div>
       </section>

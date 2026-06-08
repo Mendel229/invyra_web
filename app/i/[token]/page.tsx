@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
+import RSVPSection from "@/components/RSVPSection";
 
 // Forcer le rendu dynamique — cette page ne doit jamais être mise en cache statique
 export const dynamic = "force-dynamic";
@@ -35,9 +36,9 @@ export default async function InvitationPage({ params }: PageProps) {
     notFound();
   }
 
-  // Tracker la vue sans bloquer le rendu — fire and forget
+  // Tracker la vue de manière synchrone pour garantir l'exécution
   const inv = invitationRecord!;
-  Promise.allSettled([
+  await Promise.allSettled([
     supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
     inv.status === "brouillon"
       ? supabaseAdmin
@@ -114,66 +115,80 @@ export default async function InvitationPage({ params }: PageProps) {
     customField2Value: event.metadata?.customField2Value,
   };
 
-  // 3. SERVER ACTION POUR LA CONFIRMATION (RSVP)
+  // SERVER ACTION POUR LA CONFIRMATION (RSVP) — met à jour BDD et compteurs
   const handleConfirm = async (status: "accepted" | "declined", _comment?: string) => {
     "use server";
+    // Mettre à jour le statut de l'invitation
     await supabaseAdmin
       .from("invitations")
-      .update({ status: status })
-      .eq("id", invitationRecord.id);
+      .update({
+        status: status,
+        confirmed_at: status === "accepted" ? new Date().toISOString() : null,
+      })
+      .eq("id", invitationRecord!.id);
+
+    // Mettre à jour les compteurs sur l'event
+    if (status === "accepted") {
+      const { data: ev } = await supabaseAdmin
+        .from("events")
+        .select("guests_confirmed")
+        .eq("id", invitationRecord!.event_id)
+        .single();
+      await supabaseAdmin
+        .from("events")
+        .update({ guests_confirmed: (ev?.guests_confirmed ?? 0) + 1 })
+        .eq("id", invitationRecord!.event_id);
+    }
   };
+
+  const currentStatus = inv.status;
+
+  // RENDU DYNAMIQUE DU TEMPLATE avec RSVPSection injectée
+  const rsvpSection = (
+    <RSVPSection
+      initialStatus={currentStatus}
+      onConfirm={handleConfirm}
+    />
+  );
 
   // 4. RENDU DYNAMIQUE DU TEMPLATE
   return (
     <>
-      {/* Anniversaires */}
       {templateKey === "anniversaire-colore" && (
-        <AnniversaireFeteColoree data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <AnniversaireFeteColoree data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "neon-birthday" && (
-        <AnniversaireNeonBirthday data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <AnniversaireNeonBirthday data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
-
-      {/* Autre */}
       {templateKey === "simple-other" && (
-        <TemplateSimpleOther data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <TemplateSimpleOther data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
-
-      {/* Baptêmes */}
       {templateKey === "bapteme-celeste" && (
-        <BaptemeDouceurCeleste data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <BaptemeDouceurCeleste data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "sacred-lilies" && (
-        <BaptemeSacredLilies data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <BaptemeSacredLilies data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
-
-      {/* Corporate */}
       {templateKey === "african-tech" && (
-        <CorporateAfricanTech data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <CorporateAfricanTech data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "executive-summit" && (
-        <CorporateExecutiveSummit data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <CorporateExecutiveSummit data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
-
-      {/* Mariages */}
       {templateKey === "mariage-dore" && (
-        <MariageEleganceDoree data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <MariageEleganceDoree data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "midnight-romance" && (
-        <MariageMidnightRomance data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <MariageMidnightRomance data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
-
-      {/* Soirées VIP */}
       {templateKey === "golden-gala" && (
-        <SoireeGoldenGala data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <SoireeGoldenGala data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "midnight-accra" && (
-        <SoireeMidnightAccra data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <SoireeMidnightAccra data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
-
-      {/* Sécurité */}
       {!templateKey && (
-        <TemplateSimpleOther data={formattedData} guestName={guest.full_name} onConfirmParams={handleConfirm} />
+        <TemplateSimpleOther data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
     </>
   );

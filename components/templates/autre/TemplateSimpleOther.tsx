@@ -1,4 +1,5 @@
 "use client";
+import RSVPSection from "@/components/RSVPSection";
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export interface InvitationData {
 export interface TemplateProps {
   data: InvitationData;
   guestName: string;
+  initialStatus?: string;
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
@@ -101,7 +103,7 @@ export default function TemplateSimpleOther({ data, guestName, onConfirmParams }
 
           <div className="mt-auto">
             {data.qrCodeUrl && <div className="mx-auto mt-6 h-24 w-24 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm"><img src={data.qrCodeUrl} alt="QR code" className="h-full w-full rounded-xl object-cover" /></div>}
-            <RSVPButtons onConfirmParams={onConfirmParams} />
+            <RSVPSection initialStatus={initialStatus ?? "brouillon"} onConfirm={onConfirmParams ?? (async () => {})} wrapperClassName="mt-7 grid grid-cols-2 gap-3" />
             <p className="mt-7 text-center text-[10px] text-slate-400">Créé avec INVYRA</p>
           </div>
         </div>

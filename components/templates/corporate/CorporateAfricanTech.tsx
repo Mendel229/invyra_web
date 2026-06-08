@@ -1,4 +1,5 @@
 "use client";
+import RSVPSection from "@/components/RSVPSection";
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export interface InvitationData {
 export interface TemplateProps {
   data: InvitationData;
   guestName: string;
+  initialStatus?: string;
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
@@ -118,7 +120,7 @@ export default function CorporateAfricanTech({ data, guestName, onConfirmParams 
           </div>
 
           {data.qrCodeUrl && <div className="mx-auto mt-6 h-24 w-24 rounded-2xl border border-[#D4A017]/35 bg-white p-2 shadow-[0_0_34px_rgba(212,160,23,0.25)]"><img src={data.qrCodeUrl} alt="QR code" className="h-full w-full rounded-xl object-cover" /></div>}
-          <RSVPButtons onConfirmParams={onConfirmParams} />
+          <RSVPSection initialStatus={initialStatus ?? "brouillon"} onConfirm={onConfirmParams ?? (async () => {})} wrapperClassName="mt-7 grid grid-cols-2 gap-3" />
           <p className="mt-7 text-center text-[10px] text-white/30">Créé avec INVYRA</p>
         </div>
       </section>

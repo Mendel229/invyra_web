@@ -1,4 +1,5 @@
 "use client";
+import RSVPSection from "@/components/RSVPSection";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export interface InvitationData {
 export interface TemplateProps {
   data: InvitationData;
   guestName: string;
+  initialStatus?: string;
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
@@ -195,7 +197,7 @@ export default function MariageEleganceDoree({ data, guestName, onConfirmParams 
           )}
 
           <motion.div variants={fadeUp} custom={0.8}>
-            <RSVPButtons onConfirmParams={onConfirmParams} />
+            <RSVPSection initialStatus={initialStatus ?? "brouillon"} onConfirm={onConfirmParams ?? (async () => {})} wrapperClassName="mt-7 grid grid-cols-2 gap-3" />
           </motion.div>
 
           <motion.p variants={fadeUp} custom={0.88} className="mt-7 text-[10px] text-[#7B4A16]/45">

@@ -1,4 +1,5 @@
 "use client";
+import RSVPSection from "@/components/RSVPSection";
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export interface InvitationData {
 export interface TemplateProps {
   data: InvitationData;
   guestName: string;
+  initialStatus?: string;
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
@@ -119,7 +121,7 @@ export default function AnniversaireNeonBirthday({ data, guestName, onConfirmPar
 
           {data.customField2Value && <div className="mt-4 rounded-2xl border border-fuchsia-300/30 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-50"><span className="font-black text-cyan-200">{data.customField2Label || "Dress code"} :</span> {data.customField2Value}</div>}
           {data.qrCodeUrl && <div className="mx-auto mt-6 h-24 w-24 rounded-2xl border border-cyan-300/50 bg-white p-2 shadow-[0_0_36px_rgba(34,211,238,0.35)]"><img src={data.qrCodeUrl} alt="QR code" className="h-full w-full rounded-xl object-cover" /></div>}
-          <RSVPButtons onConfirmParams={onConfirmParams} />
+          <RSVPSection initialStatus={initialStatus ?? "brouillon"} onConfirm={onConfirmParams ?? (async () => {})} wrapperClassName="mt-7 grid grid-cols-2 gap-3" />
           <p className="mt-7 text-[10px] text-white/30">Créé avec INVYRA</p>
         </div>
       </section>

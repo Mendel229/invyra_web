@@ -1,4 +1,5 @@
 "use client";
+import RSVPSection from "@/components/RSVPSection";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export interface InvitationData {
 export interface TemplateProps {
   data: InvitationData;
   guestName: string;
+  initialStatus?: string;
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
@@ -114,7 +116,7 @@ export default function CorporateExecutiveSummit({ data, guestName, onConfirmPar
         </motion.div>
 
         <motion.div variants={item}>
-          <RSVPButtons onConfirmParams={onConfirmParams} />
+          <RSVPSection initialStatus={initialStatus ?? "brouillon"} onConfirm={onConfirmParams ?? (async () => {})} wrapperClassName="mt-7 grid grid-cols-2 gap-3" />
         </motion.div>
         <motion.p variants={item} className="mt-7 text-center text-[10px] text-slate-400">Créé avec INVYRA</motion.p>
       </motion.section>
