@@ -85,7 +85,7 @@ function Info({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function CorporateAfricanTech({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function CorporateAfricanTech({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-[#090111] px-4 py-8">
       <section className="relative min-h-[720px] w-full max-w-md overflow-hidden rounded-[2.2rem] bg-[#1A0533] p-6 text-white shadow-[0_40px_105px_rgba(26,5,51,0.62)]" style={{ fontFamily: "Inter, sans-serif" }}>

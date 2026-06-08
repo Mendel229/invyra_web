@@ -62,7 +62,7 @@ function Detail({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function TemplateSimpleOther({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function TemplateSimpleOther({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   const dots = useMemo(() => Array.from({ length: 12 }, (_, i) => ({ left: (i * 29) % 100, top: (i * 43) % 100, delay: i * 0.12 })), []);
 
   return (

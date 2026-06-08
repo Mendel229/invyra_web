@@ -75,7 +75,7 @@ function Detail({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function CorporateExecutiveSummit({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function CorporateExecutiveSummit({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 py-8">
       <motion.section initial="hidden" animate="visible" variants={container} className="relative min-h-[720px] w-full max-w-md overflow-hidden rounded-[1.8rem] border border-slate-200 bg-[#FCFCFC] p-7 text-slate-900 shadow-[0_28px_75px_rgba(15,23,42,0.12)]" style={{ fontFamily: "Inter, sans-serif" }}>

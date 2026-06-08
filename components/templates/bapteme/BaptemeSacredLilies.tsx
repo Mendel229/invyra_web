@@ -77,7 +77,7 @@ function Detail({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function BaptemeSacredLilies({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function BaptemeSacredLilies({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-[#F7F3FB] px-4 py-8">
       <section className="relative min-h-[720px] w-full max-w-md overflow-hidden rounded-[2.1rem] border border-[#E5D5F2] bg-[#FFFDFE] p-7 text-center shadow-[0_30px_80px_rgba(117,91,142,0.18)]" style={{ fontFamily: "Inter, sans-serif" }}>

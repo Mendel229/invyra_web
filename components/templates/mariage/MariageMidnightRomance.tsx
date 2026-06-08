@@ -74,7 +74,7 @@ function Field({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function MariageMidnightRomance({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function MariageMidnightRomance({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   const [opened, setOpened] = useState(false);
   const stars = useMemo(() => Array.from({ length: 42 }, (_, i) => ({ left: (i * 37) % 100, top: (i * 53) % 100, size: 1 + (i % 4), delay: (i % 9) * 0.21 })), []);
   const petals = useMemo(() => Array.from({ length: 18 }, (_, i) => ({ left: (i * 19) % 100, delay: i * 0.35, duration: 8 + (i % 5) })), []);

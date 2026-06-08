@@ -78,7 +78,7 @@ function Detail({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function BaptemeDouceurCeleste({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function BaptemeDouceurCeleste({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   const stars = useMemo(() => Array.from({ length: 18 }, (_, i) => ({ left: (i * 47) % 100, top: 8 + ((i * 37) % 68), delay: i * 0.17 })), []);
 
   return (

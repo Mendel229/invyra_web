@@ -79,7 +79,7 @@ function Info({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function AnniversaireNeonBirthday({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function AnniversaireNeonBirthday({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   const age = data.customField1Value?.match(/\d{1,3}/)?.[0];
 
   return (

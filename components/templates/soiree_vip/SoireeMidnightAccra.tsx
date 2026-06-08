@@ -76,7 +76,7 @@ function Info({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function SoireeMidnightAccra({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function SoireeMidnightAccra({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-black px-4 py-8">
       <section className="relative min-h-[720px] w-full max-w-md overflow-hidden rounded-[2.15rem] bg-[#050505] p-6 text-white shadow-[0_42px_110px_rgba(0,0,0,0.92)]" style={{ perspective: 1300, fontFamily: "Poppins, Inter, sans-serif" }}>

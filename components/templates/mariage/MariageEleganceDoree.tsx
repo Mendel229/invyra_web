@@ -119,7 +119,7 @@ function CornerOrnaments() {
   );
 }
 
-export default function MariageEleganceDoree({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function MariageEleganceDoree({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-[#EFE4D2] px-4 py-8">
       <motion.section

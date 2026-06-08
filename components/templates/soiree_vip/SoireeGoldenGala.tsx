@@ -62,7 +62,7 @@ function Info({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function SoireeGoldenGala({ data, guestName, onConfirmParams }: TemplateProps) {
+export default function SoireeGoldenGala({ data, guestName, onConfirmParams, initialStatus }: TemplateProps) {
   const [spot, setSpot] = useState({ x: 55, y: 18 });
 
   function handleMouseMove(event: MouseEvent<HTMLElement>) {
