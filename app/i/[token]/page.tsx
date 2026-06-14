@@ -154,10 +154,6 @@ export default async function InvitationPage({ params }: PageProps) {
     }
   };
 
-  // currentStatus après le tracking de vue (peut avoir changé de brouillon → envoye)
-  // On relit depuis la BDD pour avoir le statut à jour
-  const currentStatus = isFirstView ? "envoye" : inv.status;
-
   // RENDU DYNAMIQUE DU TEMPLATE
   return (
     <>
