@@ -40,9 +40,10 @@ export default async function InvitationPage({ params }: PageProps) {
   const inv = invitationRecord!;
   const isFirstView = inv.status === "brouillon";
   
+  console.log(`[INV] token=${token} | id=${inv.id} | status=${inv.status} | isFirstView=${isFirstView}`);
+
   if (isFirstView) {
-    // Première ouverture : passer en "vue" + incrémenter le compteur
-    await Promise.allSettled([
+    const [viewInsert, statusUpdate, rpcResult] = await Promise.allSettled([
       supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
       supabaseAdmin
         .from("invitations")
@@ -51,9 +52,16 @@ export default async function InvitationPage({ params }: PageProps) {
         .eq("status", "brouillon"),
       supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: inv.event_id }),
     ]);
+    console.log(`[INV] view_insert=${viewInsert.status} | status_update=${statusUpdate.status} | rpc=${rpcResult.status}`);
+    if (statusUpdate.status === "fulfilled" && (statusUpdate.value as any).error) {
+      console.error(`[INV] status_update error:`, JSON.stringify((statusUpdate.value as any).error));
+    }
+    if (rpcResult.status === "fulfilled" && (rpcResult.value as any).error) {
+      console.error(`[INV] rpc error:`, JSON.stringify((rpcResult.value as any).error));
+    }
   }
-  // currentStatus : si première vue on sait qu'on vient de passer à "vue", sinon on garde la valeur BDD
   const currentStatus = isFirstView ? "vue" : inv.status;
+  console.log(`[INV] currentStatus sent to template: ${currentStatus}`);
 
   // 2. Récupérer en parallèle : invité, QR code, et événement+template
   const [guestRes, qrRes, eventRes] = await Promise.all([
@@ -127,14 +135,18 @@ export default async function InvitationPage({ params }: PageProps) {
     // Mapper vers les valeurs réelles de l'enum Postgres invitation_status
     // confirme = accepté, decline = décliné
     const dbStatus = status === "accepted" ? "confirme" : "decline";
+    console.log(`[RSVP] invitationId=${invitationRecord!.id} | userChoice=${status} | dbStatus=${dbStatus}`);
     
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError, data: updateData } = await supabaseAdmin
       .from("invitations")
       .update({
         status: dbStatus,
         confirmed_at: new Date().toISOString(),
       })
-      .eq("id", invitationRecord!.id);
+      .eq("id", invitationRecord!.id)
+      .select("id, status");
+
+    console.log(`[RSVP] update result: data=${JSON.stringify(updateData)} | error=${JSON.stringify(updateError)}`);
 
     if (updateError) {
       console.error("[RSVP] Failed to update invitation status:", updateError.message);
