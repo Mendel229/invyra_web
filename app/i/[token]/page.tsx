@@ -36,24 +36,24 @@ export default async function InvitationPage({ params }: PageProps) {
     notFound();
   }
 
-  // Tracker la vue — seulement si c'est la première ouverture (status brouillon ou envoye)
-  // On insère une vue ET on incrémente le compteur UNIQUEMENT si l'invitation n'avait pas encore été vue
+  // Tracker la vue — seulement si c'est la première ouverture
   const inv = invitationRecord!;
   const isFirstView = inv.status === "brouillon";
   
   if (isFirstView) {
-    // Première ouverture : passer en "envoye" + incrémenter le compteur
+    // Première ouverture : passer en "vue" + incrémenter le compteur
     await Promise.allSettled([
       supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
       supabaseAdmin
         .from("invitations")
-        .update({ status: "envoye", viewed_at: new Date().toISOString() })
+        .update({ status: "vue", viewed_at: new Date().toISOString() })
         .eq("id", inv.id)
         .eq("status", "brouillon"),
       supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: inv.event_id }),
     ]);
   }
-  // Les refreshs suivants (status != brouillon) ne comptent plus comme nouvelle vue
+  // currentStatus : si première vue on sait qu'on vient de passer à "vue", sinon on garde la valeur BDD
+  const currentStatus = isFirstView ? "vue" : inv.status;
 
   // 2. Récupérer en parallèle : invité, QR code, et événement+template
   const [guestRes, qrRes, eventRes] = await Promise.all([
@@ -124,7 +124,8 @@ export default async function InvitationPage({ params }: PageProps) {
   const handleConfirm = async (status: "accepted" | "declined", _comment?: string) => {
     "use server";
     
-    // Mapper vers les valeurs de l'enum Postgres invitation_status
+    // Mapper vers les valeurs réelles de l'enum Postgres invitation_status
+    // confirme = accepté, decline = décliné
     const dbStatus = status === "accepted" ? "confirme" : "decline";
     
     const { error: updateError } = await supabaseAdmin

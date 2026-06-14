@@ -29,7 +29,6 @@ export default function RSVPSection({
   const hasResponded = status === "accepted" || status === "declined"
     || status === "confirme" || status === "decline";
   const isAcceptedFinal = status === "accepted" || status === "confirme";
-
   async function handleConfirmed() {
     if (!showConfirm) return;
     setLoading(showConfirm);
