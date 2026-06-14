@@ -26,7 +26,9 @@ export default function RSVPSection({
   const [loading, setLoading] = useState<"accepted" | "declined" | null>(null);
   const [showConfirm, setShowConfirm] = useState<"accepted" | "declined" | null>(null);
 
-  const hasResponded = status === "accepted" || status === "declined";
+  const hasResponded = status === "accepted" || status === "declined"
+    || status === "confirme" || status === "decline";
+  const isAcceptedFinal = status === "accepted" || status === "confirme";
 
   async function handleConfirmed() {
     if (!showConfirm) return;
@@ -42,11 +44,10 @@ export default function RSVPSection({
 
   // Affichage si déjà répondu
   if (hasResponded) {
-    const isAccepted = status === "accepted";
     return (
       <div className="mt-7 rounded-2xl border border-white/20 bg-white/10 px-4 py-4 text-center backdrop-blur">
         <p className="text-sm font-bold text-white">
-          {isAccepted ? "✓ Vous avez confirmé votre présence" : "✗ Vous avez décliné cette invitation"}
+          {isAcceptedFinal ? "✓ Vous avez confirmé votre présence" : "✗ Vous avez décliné cette invitation"}
         </p>
         <p className="mt-1 text-xs text-white/60">
           Votre réponse a été enregistrée.

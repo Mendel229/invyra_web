@@ -36,19 +36,24 @@ export default async function InvitationPage({ params }: PageProps) {
     notFound();
   }
 
-  // Tracker la vue de manière synchrone pour garantir l'exécution
+  // Tracker la vue — seulement si c'est la première ouverture (status brouillon ou envoye)
+  // On insère une vue ET on incrémente le compteur UNIQUEMENT si l'invitation n'avait pas encore été vue
   const inv = invitationRecord!;
-  await Promise.allSettled([
-    supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
-    inv.status === "brouillon"
-      ? supabaseAdmin
-          .from("invitations")
-          .update({ status: "envoye", viewed_at: new Date().toISOString() })
-          .eq("id", inv.id)
-          .eq("status", "brouillon")
-      : Promise.resolve(),
-    supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: inv.event_id }),
-  ]);
+  const isFirstView = inv.status === "brouillon";
+  
+  if (isFirstView) {
+    // Première ouverture : passer en "envoye" + incrémenter le compteur
+    await Promise.allSettled([
+      supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
+      supabaseAdmin
+        .from("invitations")
+        .update({ status: "envoye", viewed_at: new Date().toISOString() })
+        .eq("id", inv.id)
+        .eq("status", "brouillon"),
+      supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: inv.event_id }),
+    ]);
+  }
+  // Les refreshs suivants (status != brouillon) ne comptent plus comme nouvelle vue
 
   // 2. Récupérer en parallèle : invité, QR code, et événement+template
   const [guestRes, qrRes, eventRes] = await Promise.all([
@@ -118,16 +123,23 @@ export default async function InvitationPage({ params }: PageProps) {
   // SERVER ACTION POUR LA CONFIRMATION (RSVP) — met à jour BDD et compteurs
   const handleConfirm = async (status: "accepted" | "declined", _comment?: string) => {
     "use server";
-    // Mettre à jour le statut de l'invitation
-    await supabaseAdmin
+    
+    // Mapper vers les valeurs de l'enum Postgres invitation_status
+    const dbStatus = status === "accepted" ? "confirme" : "decline";
+    
+    const { error: updateError } = await supabaseAdmin
       .from("invitations")
       .update({
-        status: status,
-        confirmed_at: status === "accepted" ? new Date().toISOString() : null,
+        status: dbStatus,
+        confirmed_at: new Date().toISOString(),
       })
       .eq("id", invitationRecord!.id);
 
-    // Mettre à jour les compteurs sur l'event
+    if (updateError) {
+      console.error("[RSVP] Failed to update invitation status:", updateError.message);
+      return;
+    }
+
     if (status === "accepted") {
       const { data: ev } = await supabaseAdmin
         .from("events")
@@ -141,17 +153,11 @@ export default async function InvitationPage({ params }: PageProps) {
     }
   };
 
-  const currentStatus = inv.status;
+  // currentStatus après le tracking de vue (peut avoir changé de brouillon → envoye)
+  // On relit depuis la BDD pour avoir le statut à jour
+  const currentStatus = isFirstView ? "envoye" : inv.status;
 
-  // RENDU DYNAMIQUE DU TEMPLATE avec RSVPSection injectée
-  const rsvpSection = (
-    <RSVPSection
-      initialStatus={currentStatus}
-      onConfirm={handleConfirm}
-    />
-  );
-
-  // 4. RENDU DYNAMIQUE DU TEMPLATE
+  // RENDU DYNAMIQUE DU TEMPLATE
   return (
     <>
       {templateKey === "anniversaire-colore" && (
