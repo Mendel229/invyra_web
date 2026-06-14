@@ -38,26 +38,24 @@ export default async function InvitationPage({ params }: PageProps) {
 
   // Tracker la vue — seulement si c'est la première ouverture
   const inv = invitationRecord!;
+  const invitationId = inv.id;
+  const eventId = inv.event_id;
   const isFirstView = inv.status === "brouillon";
   
-  console.log(`[INV] token=${token} | id=${inv.id} | status=${inv.status} | isFirstView=${isFirstView}`);
+  console.log(`[INV] token=${token} | id=${invitationId} | status=${inv.status} | isFirstView=${isFirstView}`);
 
   if (isFirstView) {
     const [viewInsert, statusUpdate, rpcResult] = await Promise.allSettled([
-      supabaseAdmin.from("invitation_views").insert({ invitation_id: inv.id }),
-      supabaseAdmin
-        .from("invitations")
-        .update({ status: "vue", viewed_at: new Date().toISOString() })
-        .eq("id", inv.id)
-        .eq("status", "brouillon"),
-      supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: inv.event_id }),
+      supabaseAdmin.from("invitation_views").insert({ invitation_id: invitationId }),
+      supabaseAdmin.rpc("update_invitation_rsvp", {
+        invitation_id_param: invitationId,
+        new_status: "vue",
+      }),
+      supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: eventId }),
     ]);
     console.log(`[INV] view_insert=${viewInsert.status} | status_update=${statusUpdate.status} | rpc=${rpcResult.status}`);
     if (statusUpdate.status === "fulfilled" && (statusUpdate.value as any).error) {
       console.error(`[INV] status_update error:`, JSON.stringify((statusUpdate.value as any).error));
-    }
-    if (rpcResult.status === "fulfilled" && (rpcResult.value as any).error) {
-      console.error(`[INV] rpc error:`, JSON.stringify((rpcResult.value as any).error));
     }
   }
   const currentStatus = isFirstView ? "vue" : inv.status;
@@ -128,41 +126,31 @@ export default async function InvitationPage({ params }: PageProps) {
     customField2Value: event.metadata?.customField2Value,
   };
 
-  // SERVER ACTION POUR LA CONFIRMATION (RSVP) — met à jour BDD et compteurs
+  // SERVER ACTION POUR LA CONFIRMATION (RSVP)
   const handleConfirm = async (status: "accepted" | "declined", _comment?: string) => {
     "use server";
     
-    // Mapper vers les valeurs réelles de l'enum Postgres invitation_status
-    // confirme = accepté, decline = décliné
     const dbStatus = status === "accepted" ? "confirme" : "decline";
-    console.log(`[RSVP] invitationId=${invitationRecord!.id} | userChoice=${status} | dbStatus=${dbStatus}`);
+    console.log(`[RSVP] invitationId=${invitationId} | userChoice=${status} | dbStatus=${dbStatus}`);
     
-    const { error: updateError, data: updateData } = await supabaseAdmin
-      .from("invitations")
-      .update({
-        status: dbStatus,
-        confirmed_at: new Date().toISOString(),
-      })
-      .eq("id", invitationRecord!.id)
-      .select("id, status");
+    // Utiliser une fonction SECURITY DEFINER pour bypasser la RLS
+    const { error: rsvpError } = await supabaseAdmin
+      .rpc("update_invitation_rsvp", {
+        invitation_id_param: invitationId,
+        new_status: dbStatus,
+      });
 
-    console.log(`[RSVP] update result: data=${JSON.stringify(updateData)} | error=${JSON.stringify(updateError)}`);
+    console.log(`[RSVP] rpc result: error=${JSON.stringify(rsvpError)}`);
 
-    if (updateError) {
-      console.error("[RSVP] Failed to update invitation status:", updateError.message);
+    if (rsvpError) {
+      console.error("[RSVP] Failed:", rsvpError.message);
       return;
     }
 
     if (status === "accepted") {
-      const { data: ev } = await supabaseAdmin
-        .from("events")
-        .select("guests_confirmed")
-        .eq("id", invitationRecord!.event_id)
-        .single();
-      await supabaseAdmin
-        .from("events")
-        .update({ guests_confirmed: (ev?.guests_confirmed ?? 0) + 1 })
-        .eq("id", invitationRecord!.event_id);
+      await supabaseAdmin.rpc("increment_guests_confirmed", {
+        event_id_param: eventId,
+      });
     }
   };
 
