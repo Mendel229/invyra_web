@@ -15,6 +15,7 @@ import CorporateAfricanTech from "@/components/templates/corporate/CorporateAfri
 import CorporateExecutiveSummit from "@/components/templates/corporate/CorporateExecutiveSummit";
 import MariageEleganceDoree from "@/components/templates/mariage/MariageEleganceDoree";
 import MariageMidnightRomance from "@/components/templates/mariage/MariageMidnightRomance";
+import MariageSaugeEukalyptus from "@/components/templates/mariage/MariageSaugeEukalyptus";
 import SoireeGoldenGala from "@/components/templates/soiree_vip/SoireeGoldenGala";
 import SoireeMidnightAccra from "@/components/templates/soiree_vip/SoireeMidnightAccra";
 
@@ -189,6 +190,9 @@ export default async function InvitationPage({ params }: PageProps) {
       )}
       {templateKey === "midnight-accra" && (
         <SoireeMidnightAccra data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
+      )}
+      {templateKey === "sauge-eukalyptus" && (
+        <MariageSaugeEukalyptus data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {!templateKey && (
         <TemplateSimpleOther data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />

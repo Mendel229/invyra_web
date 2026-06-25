@@ -9,6 +9,7 @@ import CorporateAfricanTech from "@/components/templates/corporate/CorporateAfri
 import CorporateExecutiveSummit from "@/components/templates/corporate/CorporateExecutiveSummit";
 import MariageEleganceDoree from "@/components/templates/mariage/MariageEleganceDoree";
 import MariageMidnightRomance from "@/components/templates/mariage/MariageMidnightRomance";
+import MariageSaugeEukalyptus from "@/components/templates/mariage/MariageSaugeEukalyptus";
 import SoireeGoldenGala from "@/components/templates/soiree_vip/SoireeGoldenGala";
 import SoireeMidnightAccra from "@/components/templates/soiree_vip/SoireeMidnightAccra";
 
@@ -27,7 +28,7 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
     "anniversaire-colore", "neon-birthday", "simple-other",
     "bapteme-celeste", "sacred-lilies", "african-tech",
     "executive-summit", "mariage-dore", "midnight-romance",
-    "golden-gala", "midnight-accra",
+    "golden-gala", "midnight-accra", "sauge-eukalyptus",
   ];
 
   if (!validTemplates.includes(templateKey)) {
@@ -121,6 +122,9 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
       )}
       {templateKey === "midnight-accra" && (
         <SoireeMidnightAccra data={previewData as any} guestName={guestName} onConfirmParams={handleDemoConfirm as any} />
+      )}
+      {templateKey === "sauge-eukalyptus" && (
+        <MariageSaugeEukalyptus data={previewData as any} guestName={guestName} onConfirmParams={handleDemoConfirm as any} />
       )}
     </div>
   );
