@@ -17,6 +17,7 @@ export interface InvitationData {
   customField1Value?: string;
   customField2Label?: string;
   customField2Value?: string;
+  eventDateIso?: string | null;
 }
 
 export interface TemplateProps {
@@ -184,7 +185,7 @@ function IntroScreen({ couple, initials, logoUrl, onEnter }: {
             className="text-white/90 text-lg"
             style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}
           >
-            Click Aqui
+            Appuyez ici
           </span>
         </motion.div>
 
@@ -207,10 +208,10 @@ function IntroScreen({ couple, initials, logoUrl, onEnter }: {
 // ─── Timeline programme ───────────────────────────────────────────────────────
 function Timeline() {
   const events = [
-    { time: "09:00 A.M.", label: "Ceremonia", icon: "💍" },
-    { time: "11:30 A.M.", label: "Cocktail", icon: "🥂" },
-    { time: "12:00 P.M.", label: "Recepción", icon: "🎊" },
-    { time: "01:00 P.M.", label: "Festa", icon: "🍽️" },
+    { time: "09h00", label: "Cérémonie", icon: "💍" },
+    { time: "11h30", label: "Cocktail", icon: "🥂" },
+    { time: "12h00", label: "Réception", icon: "🎊" },
+    { time: "13h00", label: "Fête", icon: "🍽️" },
   ];
 
   return (
@@ -249,7 +250,7 @@ function Timeline() {
 function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: TemplateProps) {
   const couple = data.nomCouple || data.name;
   const initials = couple.split(/[\s&]+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() || "AM";
-  const countdown = useCountdown(data.date);
+  const countdown = useCountdown(data.eventDateIso || data.date);
 
   const section = (delay = 0) => ({
     hidden: { opacity: 0, y: 24 },
@@ -339,7 +340,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
               {data.date.split(" ")[1] || "06"}
             </p>
             <p className="text-[#6b7c5a] text-sm uppercase tracking-wider">
-              {data.date.split(" ")[2] || "Junho"}
+              {data.date.split(" ")[2] || "Juin"}
             </p>
           </div>
         </motion.div>
@@ -362,7 +363,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
           className="bg-[#4a5e38] rounded-2xl px-6 py-5 text-white text-center shadow-md"
         >
           <p className="text-sm italic leading-relaxed opacity-90">
-            "Con la bendición de Dios y nuestros padres, tenemos el honor de invitarlos a nuestra boda."
+            "Avec la bénédiction de Dieu et de nos parents, nous avons l'honneur de vous inviter à notre mariage."
           </p>
         </motion.div>
 
@@ -370,10 +371,10 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         <motion.div variants={section(0.25)} className="bg-white rounded-2xl px-6 py-5 shadow-sm">
           <div className="flex justify-center gap-4">
             {[
-              { v: countdown.d, l: "Dias" },
-              { v: countdown.h, l: "Horas" },
+              { v: countdown.d, l: "Jours" },
+              { v: countdown.h, l: "Heures" },
               { v: countdown.m, l: "Min" },
-              { v: countdown.s, l: "Seg" },
+              { v: countdown.s, l: "Sec" },
             ].map(({ v, l }, i) => (
               <div key={l} className="flex items-center gap-1">
                 {i > 0 && <span className="text-[#4a5e38] text-xl font-bold mb-3">:</span>}
@@ -395,7 +396,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
 
         {/* ── Local ── */}
         <motion.div variants={section(0.3)} className="bg-white rounded-2xl px-6 py-5 shadow-sm">
-          <p className="font-bold text-[#3d4f2d] text-lg italic mb-1">Lugar:</p>
+          <p className="font-bold text-[#3d4f2d] text-lg italic mb-1">Lieu :</p>
           <p className="text-[#4a5e38] font-semibold">{data.place}</p>
           {data.heure && (
             <p className="text-[#6b7c5a] text-sm mt-1">{data.heure}</p>
@@ -404,7 +405,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
             <p className="text-[#6b7c5a] text-sm mt-1">{data.customField1Value}</p>
           )}
           <button className="mt-3 bg-[#4a5e38] text-white text-xs px-4 py-1.5 rounded-full">
-            Ubicación →
+            Voir sur la carte →
           </button>
         </motion.div>
 
@@ -414,7 +415,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
             <div className="w-8 h-8 rounded-full bg-[#4a5e38]/15 flex items-center justify-center">
               <span className="text-[#4a5e38] text-sm font-bold italic">{initials}</span>
             </div>
-            <p className="text-[#3d4f2d] font-bold italic text-lg">Itinerario de Boda</p>
+            <p className="text-[#3d4f2d] font-bold italic text-lg">Programme de la Journée</p>
           </div>
           <Timeline />
         </motion.div>
@@ -423,7 +424,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         {data.customField2Value && (
           <motion.div variants={section(0.4)} className="bg-white rounded-2xl px-6 py-5 shadow-sm">
             <p className="text-[#3d4f2d] font-bold italic text-lg mb-3">
-              {data.customField2Label || "Código de Vestimenta"}
+              {data.customField2Label || "Code Vestimentaire"}
             </p>
             <div className="flex items-center gap-3">
               <span className="text-3xl">👗</span>
@@ -444,7 +445,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
               </div>
             </div>
             <p className="text-[#6b7c5a] text-xs mt-2 italic">
-              Tu invitación digital — {guestName}
+              Votre invitation numérique — {guestName}
             </p>
           </motion.div>
         )}
@@ -454,7 +455,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
           variants={section(0.5)}
           className="bg-[#4a5e38] rounded-2xl px-6 py-5 shadow-md"
         >
-          <p className="text-white text-center text-lg font-bold italic mb-3">El Gran Día</p>
+          <p className="text-white text-center text-lg font-bold italic mb-3">Le Grand Jour</p>
           <div className="grid grid-cols-7 gap-1 text-center">
             {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
               <span key={i} className="text-white/50 text-[10px] font-bold">{d}</span>
@@ -481,7 +482,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
           variants={section(0.55)}
           className="bg-white rounded-2xl px-6 py-6 shadow-sm"
         >
-          <p className="text-[#3d4f2d] text-center font-bold italic text-xl mb-4">Confirma tu Presencia</p>
+          <p className="text-[#3d4f2d] text-center font-bold italic text-xl mb-4">Confirmez votre Présence</p>
           <FloralDivider />
           <div className="mt-4">
             <RSVPSection
@@ -489,8 +490,8 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
               onConfirm={onConfirmParams ?? (async () => {})}
               acceptClassName="w-full rounded-full bg-[#4a5e38] py-3 text-sm font-semibold text-white shadow-md"
               declineClassName="w-full rounded-full border border-[#4a5e38]/40 bg-white py-3 text-sm font-semibold text-[#4a5e38]"
-              acceptLabel="Confirmar Asistencia ✓"
-              declineLabel="No podré asistir"
+              acceptLabel="Je confirme ma présence ✓"
+              declineLabel="Je ne pourrai pas venir"
               wrapperClassName="flex flex-col gap-3"
             />
           </div>

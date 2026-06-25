@@ -17,6 +17,7 @@ export interface InvitationData {
   customField1Value?: string;
   customField2Label?: string;
   customField2Value?: string;
+  eventDateIso?: string | null;
 }
 
 export interface TemplateProps {
@@ -146,7 +147,7 @@ function EnvelopeOpening({ onComplete }: { onComplete: () => void }) {
         className="font-serif text-3xl text-[#5a6b4a] text-center mb-1"
         style={{ fontFamily: "'Dancing Script', cursive, serif" }}
       >
-        Querido Convidado
+        Cher Invité
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }}
@@ -154,7 +155,7 @@ function EnvelopeOpening({ onComplete }: { onComplete: () => void }) {
         transition={{ delay: 0.8 }}
         className="text-[#7a8a6a] text-sm text-center mb-8"
       >
-        Possuímos um convite especial para você!
+        Nous avons une invitation spéciale pour vous !
       </motion.p>
 
       {/* Enveloppe */}
@@ -197,7 +198,7 @@ function EnvelopeOpening({ onComplete }: { onComplete: () => void }) {
           transition={{ duration: 2, repeat: Infinity }}
           className="text-center text-[#8a9e72] text-xs mt-4"
         >
-          {opened ? "Abrindo..." : "Toque para abrir ✉"}
+          {opened ? "Ouverture..." : "Appuyez pour ouvrir ✉"}
         </motion.p>
       </motion.div>
     </motion.div>
@@ -206,8 +207,7 @@ function EnvelopeOpening({ onComplete }: { onComplete: () => void }) {
 
 // ─── Contenu principal ────────────────────────────────────────────────────────
 function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: TemplateProps) {
-  const eventDateRaw = data.date;
-  // On reconstruit une date ISO approximative depuis la date formatée
+  const eventDateRaw = data.eventDateIso || data.date;
   const countdown = useCountdown(eventDateRaw);
   const couple = data.nomCouple || data.name;
 
@@ -267,7 +267,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
 
           {/* Nom invité */}
           <motion.p variants={fadeUp(0.55)} className="mt-3 text-[#5a6b4a] text-sm italic">
-            Para: <span className="font-semibold not-italic">{guestName}</span>
+            Pour : <span className="font-semibold not-italic">{guestName}</span>
           </motion.p>
         </div>
       </div>
@@ -283,13 +283,13 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
 
         {/* ── Countdown ── */}
         <motion.div variants={fadeUp(0.15)} className="text-center">
-          <p className="text-[#8a9e72] text-xs uppercase tracking-[0.2em] mb-3">A cada segundo, mais perto do nosso "sim"</p>
+          <p className="text-[#8a9e72] text-xs uppercase tracking-[0.2em] mb-3">Chaque seconde nous rapproche de notre "oui"</p>
           <div className="flex justify-center gap-3">
             {[
-              { v: countdown.days, l: "Dias" },
-              { v: countdown.hours, l: "Horas" },
-              { v: countdown.minutes, l: "Minutos" },
-              { v: countdown.seconds, l: "Segundos" },
+              { v: countdown.days, l: "Jours" },
+              { v: countdown.hours, l: "Heures" },
+              { v: countdown.minutes, l: "Minutes" },
+              { v: countdown.seconds, l: "Secondes" },
             ].map(({ v, l }, i) => (
               <div key={l} className="flex flex-col items-center">
                 {i > 0 && <span className="text-[#6b8055] text-2xl font-bold absolute mt-0.5">:</span>}
@@ -319,7 +319,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
               </svg>
             </div>
-            <p className="font-serif text-xl text-[#4a5e38] italic">Local</p>
+            <p className="font-serif text-xl text-[#4a5e38] italic">Lieu</p>
           </div>
           <p className="font-semibold text-[#3a4a2a] text-center">{data.place}</p>
           {data.customField1Value && (
@@ -334,27 +334,27 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         {/* ── Dress code / palette ── */}
         {data.customField2Value && (
           <motion.div variants={fadeUp(0.25)} className="bg-white rounded-2xl p-5 shadow-sm border border-[#e0dac8]">
-            <p className="font-serif text-lg text-[#4a5e38] italic mb-3">Paleta do Casamento</p>
+            <p className="font-serif text-lg text-[#4a5e38] italic mb-3">Palette du Mariage</p>
             <div className="flex items-center gap-3 mb-3">
               {["#d4c98a", "#a8bf90", "#6b8055"].map((c) => (
                 <div key={c} className="w-8 h-8 rounded-full shadow-sm" style={{ background: c }} />
               ))}
             </div>
             <div className="bg-[#6b8055] text-white text-xs px-3 py-1 rounded inline-block mb-2">
-              {data.customField2Label || "Traje"}: {data.customField2Value}
+              {data.customField2Label || "Tenue"}: {data.customField2Value}
             </div>
           </motion.div>
         )}
 
         {/* ── Manuel do Convidado ── */}
         <motion.div variants={fadeUp(0.3)} className="bg-white rounded-2xl p-5 shadow-sm border border-[#e0dac8]">
-          <p className="font-serif text-lg text-[#4a5e38] italic mb-4">Manual do Convidado</p>
+          <p className="font-serif text-lg text-[#4a5e38] italic mb-4">Guide de l'Invité</p>
           <div className="flex flex-col gap-3">
             {[
-              { icon: "⏰", text: "Chegue um minutinho antes" },
-              { icon: "🥂", text: "Brinde! Deixe pra nois!" },
-              { icon: "📸", text: "Apareça com seu melhor olhar" },
-              { icon: "🎶", text: "Nada de cortar o caminho da câmera, tá?" },
+              { icon: "⏰", text: "Arrivez quelques minutes à l'avance" },
+              { icon: "🥂", text: "Trinquons ! Laissez-nous faire !" },
+              { icon: "📸", text: "Montrez votre plus beau sourire" },
+              { icon: "🎶", text: "Ne coupez pas le chemin du photographe !" },
             ].map(({ icon, text }, i) => (
               <motion.div
                 key={i}
@@ -378,7 +378,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
           >
             <div className="bg-white p-3 shadow-lg rounded-sm rotate-[-1deg] mx-auto max-w-[220px]">
               <img src={data.logoUrl} alt="Couple" className="w-full aspect-[4/3] object-cover rounded-sm" />
-              <p className="text-center text-[#8a9e72] text-xs italic mt-2 font-serif">I love you ♡</p>
+              <p className="text-center text-[#8a9e72] text-xs italic mt-2 font-serif">Je t'aime ♡</p>
             </div>
           </motion.div>
         )}
@@ -386,7 +386,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         {/* ── QR Code ── */}
         {data.qrCodeUrl && (
           <motion.div variants={fadeUp(0.4)} className="flex flex-col items-center gap-2">
-            <p className="text-[#8a9e72] text-xs uppercase tracking-wider">Seu convite digital</p>
+            <p className="text-[#8a9e72] text-xs uppercase tracking-wider">Votre invitation numérique</p>
             <div className="bg-white p-3 rounded-xl shadow-sm border border-[#e0dac8]">
               <img src={data.qrCodeUrl} alt="QR Code" className="w-24 h-24 rounded-lg" />
             </div>
@@ -395,14 +395,14 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
 
         {/* ── RSVP ── */}
         <motion.div variants={fadeUp(0.45)} className="bg-[#6b8055]/10 rounded-2xl p-5 border border-[#6b8055]/20">
-          <p className="font-serif text-center text-lg text-[#4a5e38] italic mb-4">Confirme sua Presença</p>
+          <p className="font-serif text-center text-lg text-[#4a5e38] italic mb-4">Confirmez votre Présence</p>
           <RSVPSection
             initialStatus={initialStatus ?? "brouillon"}
             onConfirm={onConfirmParams ?? (async () => {})}
             acceptClassName="w-full rounded-full bg-[#6b8055] py-3 text-sm font-semibold text-white shadow-md"
             declineClassName="w-full rounded-full border border-[#6b8055]/50 bg-white py-3 text-sm font-semibold text-[#6b8055]"
-            acceptLabel="Quero Confirmar ✓"
-            declineLabel="Não poderei ir"
+            acceptLabel="Je confirme ma présence ✓"
+            declineLabel="Je ne pourrai pas venir"
             wrapperClassName="flex flex-col gap-3"
           />
         </motion.div>
@@ -412,7 +412,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
           <div className="w-40 h-20"><FloralBottomRight /></div>
         </div>
 
-        <p className="text-center text-[10px] text-[#8a9e72]/60">Criado com INVYRA</p>
+        <p className="text-center text-[10px] text-[#8a9e72]/60">Créé avec INVYRA</p>
       </div>
     </motion.div>
   );
