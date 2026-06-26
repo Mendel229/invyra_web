@@ -54,16 +54,16 @@ export async function updateTemplate(id: string, updates: Record<string, unknown
     if (key in updates) filtered[key] = updates[key];
   }
 
-  const { error, data } = await supabaseAdmin
+  const { error, count } = await supabaseAdmin
     .from("event_templates")
     .update(filtered)
     .eq("id", id)
-    .select("id, config");
+    .select("id", { count: "exact", head: true });
 
-  if (error) throw new Error(`Supabase error: ${error.message} (code: ${error.code})`);
-  if (!data || data.length === 0) throw new Error(`Aucune ligne mise à jour pour id=${id} — vérifiez les permissions`);
+  if (error) throw new Error(`Supabase error: ${error.message}`);
+  if (!count || count === 0) throw new Error(`Aucune ligne mise à jour pour id=${id}`);
 }
-
+}
 /** Active ou désactive un template */
 export async function toggleTemplateActive(id: string, isActive: boolean) {
   return updateTemplate(id, { is_active: isActive });
