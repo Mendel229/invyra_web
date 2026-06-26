@@ -3,7 +3,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { TEMPLATES_BY_KEY } from "@/lib/templates-registry";
 
-/** Récupère tous les templates depuis la BDD */
 export async function getDbTemplates() {
   const { data, error } = await supabaseAdmin
     .from("event_templates")
@@ -13,10 +12,9 @@ export async function getDbTemplates() {
   return data ?? [];
 }
 
-/** Crée un template en BDD depuis le registre du code */
 export async function createTemplateFromRegistry(webTemplateKey: string) {
   const entry = TEMPLATES_BY_KEY[webTemplateKey];
-  if (!entry) throw new Error(`Template "${webTemplateKey}" introuvable dans le registre`);
+  if (!entry) throw new Error("Template not found: " + webTemplateKey);
 
   const { error } = await supabaseAdmin.from("event_templates").insert({
     name: entry.name,
@@ -35,15 +33,13 @@ export async function createTemplateFromRegistry(webTemplateKey: string) {
       demoImages: entry.demo_images,
     },
     preview_images: entry.demo_images.map(
-      (img) => `/templates/${entry.web_template_key}/${img}`
+      (img) => "/templates/" + entry.web_template_key + "/" + img
     ),
   });
   if (error) throw new Error(error.message);
 }
 
-/** Met à jour un template existant — uniquement les champs modifiables */
 export async function updateTemplate(id: string, updates: Record<string, unknown>) {
-  // Filtrer uniquement les champs qu'on peut modifier
   const allowed = [
     "name", "description", "event_type", "tier", "web_template_key",
     "sort_order", "is_animated", "is_popular", "is_active",
@@ -54,22 +50,18 @@ export async function updateTemplate(id: string, updates: Record<string, unknown
     if (key in updates) filtered[key] = updates[key];
   }
 
-  const { error, count } = await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("event_templates")
     .update(filtered)
-    .eq("id", id)
-    .select("id", { count: "exact", head: true });
+    .eq("id", id);
 
-  if (error) throw new Error(`Supabase error: ${error.message}`);
-  if (!count || count === 0) throw new Error(`Aucune ligne mise à jour pour id=${id}`);
+  if (error) throw new Error(error.message);
 }
-}
-/** Active ou désactive un template */
+
 export async function toggleTemplateActive(id: string, isActive: boolean) {
   return updateTemplate(id, { is_active: isActive });
 }
 
-/** Supprime un template de la BDD */
 export async function deleteTemplate(id: string) {
   const { error } = await supabaseAdmin
     .from("event_templates")
@@ -78,7 +70,6 @@ export async function deleteTemplate(id: string) {
   if (error) throw new Error(error.message);
 }
 
-/** Crée un template entièrement manuel (sans registre) */
 export async function createTemplateManual(payload: {
   name: string;
   description: string;
