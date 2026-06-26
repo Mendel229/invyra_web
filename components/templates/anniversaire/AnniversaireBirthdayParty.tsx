@@ -27,10 +27,18 @@ export interface TemplateProps {
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
-// ─── Couleur principale ───────────────────────────────────────────────────────
+// ─── Couleurs ─────────────────────────────────────────────────────────────────
 const PINK = "#e8547a";
 const PINK_LIGHT = "#fce8ed";
 const PINK_BORDER = "#f7c4d0";
+
+// ─── Images libres de droits Unsplash (démo quand pas de photo utilisateur) ───
+const DEMO_IMAGES = [
+  "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600&q=80",
+  "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80",
+  "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=600&q=80",
+  "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&q=80",
+];
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
 function useCountdown(dateStr: string) {
@@ -54,13 +62,13 @@ function useCountdown(dateStr: string) {
   return t;
 }
 
-// ─── Étoile déco ─────────────────────────────────────────────────────────────
-function StarDot({ color = PINK }: { color?: string }) {
+// ─── Étoile animée ────────────────────────────────────────────────────────────
+function StarDot({ size = 11 }: { size?: number }) {
   return (
     <motion.span
       animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.4, 1, 0.4] }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-      style={{ color, fontSize: 11, display: "inline-block" }}
+      transition={{ duration: 2.5, repeat: Infinity }}
+      style={{ color: PINK, fontSize: size, display: "inline-block" }}
     >
       ✦
     </motion.span>
@@ -84,7 +92,7 @@ function StarRow() {
   );
 }
 
-// ─── Section titre ────────────────────────────────────────────────────────────
+// ─── Titre de section (style bold uppercase + script sous-titre) ──────────────
 function SectionTitle({ main, sub }: { main: string; sub?: string }) {
   return (
     <div className="mb-4">
@@ -98,7 +106,10 @@ function SectionTitle({ main, sub }: { main: string; sub?: string }) {
         </h2>
       </div>
       {sub && (
-        <p className="text-xs italic text-gray-300 ml-5" style={{ fontFamily: "Georgia, serif" }}>
+        <p
+          className="text-xs italic text-gray-300 ml-5"
+          style={{ fontFamily: "Georgia, serif" }}
+        >
           {sub}
         </p>
       )}
@@ -106,11 +117,12 @@ function SectionTitle({ main, sub }: { main: string; sub?: string }) {
   );
 }
 
-// ─── Mini calendrier ──────────────────────────────────────────────────────────
+// ─── Mini calendrier (jours en français) ─────────────────────────────────────
 function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLabel: string }) {
   let month = "Octobre";
   let targetDay = 14;
   let year = 2026;
+  let offset = 1;
 
   if (dateIso) {
     try {
@@ -119,18 +131,12 @@ function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLab
       month = month.charAt(0).toUpperCase() + month.slice(1);
       targetDay = d.getDate();
       year = d.getFullYear();
+      const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+      offset = (firstDay.getDay() + 6) % 7;
     } catch (_) {}
   }
 
-  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-  // Utiliser décalage réel si possible
-  let offset = 1;
-  if (dateIso) {
-    try {
-      const firstDay = new Date(new Date(dateIso).getFullYear(), new Date(dateIso).getMonth(), 1);
-      offset = (firstDay.getDay() + 6) % 7; // 0=lundi
-    } catch (_) {}
-  }
+  const days = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
 
   return (
     <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
@@ -149,9 +155,7 @@ function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLab
             <motion.span
               key={day}
               className={`text-[10px] mx-auto w-5 h-5 flex items-center justify-center rounded-full font-medium ${
-                isTarget
-                  ? "font-black text-white shadow-sm"
-                  : "text-gray-500"
+                isTarget ? "font-black text-white shadow-sm" : "text-gray-500"
               }`}
               style={isTarget ? { background: PINK } : {}}
               animate={isTarget ? { scale: [1, 1.2, 1] } : {}}
@@ -169,33 +173,34 @@ function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLab
   );
 }
 
-// ─── Grille photos style moodboard ───────────────────────────────────────────
-function PhotoGrid({ logoUrl, count = 4 }: { logoUrl?: string; count?: number }) {
-  if (!logoUrl) return null;
+// ─── Grille photos moodboard 2×2 ─────────────────────────────────────────────
+function PhotoGrid({ logoUrl }: { logoUrl?: string }) {
+  const sources = logoUrl
+    ? Array(4).fill(logoUrl)
+    : DEMO_IMAGES;
 
-  // Grille 2x2 comme dans l'image de référence
   const positions = [
-    { className: "col-span-2 row-span-1", height: "h-36" },  // large en haut
-    { className: "col-span-1 row-span-1", height: "h-28" },
-    { className: "col-span-1 row-span-1", height: "h-28" },
-    { className: "col-span-2 row-span-1", height: "h-28" },  // large en bas
+    { span: "col-span-2", height: "h-36" },
+    { span: "col-span-1", height: "h-28" },
+    { span: "col-span-1", height: "h-28" },
+    { span: "col-span-2", height: "h-28" },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden">
-      {positions.slice(0, count).map((pos, i) => (
+      {positions.map((pos, i) => (
         <motion.div
           key={i}
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: i * 0.08, duration: 0.5 }}
-          className={`${pos.className} ${pos.height} overflow-hidden rounded-xl`}
+          transition={{ delay: i * 0.07, duration: 0.45 }}
+          className={`${pos.span} ${pos.height} overflow-hidden rounded-xl`}
         >
           <img
-            src={logoUrl}
+            src={sources[i]}
             alt=""
             className="w-full h-full object-cover"
-            style={{ filter: i % 2 === 0 ? "none" : "brightness(0.92) saturate(1.1)" }}
+            style={{ filter: i === 1 ? "brightness(0.9) saturate(1.15)" : "none" }}
           />
         </motion.div>
       ))}
@@ -208,51 +213,48 @@ interface TimelineItem { time: string; label: string; desc?: string }
 
 function Timeline({ items }: { items: TimelineItem[] }) {
   return (
-    <div className="flex flex-col gap-0">
-      {items.map(({ time, label, desc }, i) => {
-        const isFirst = i === 0;
-        return (
-          <div key={i} className="flex gap-4">
-            {/* Ligne + cercle */}
-            <div className="flex flex-col items-center flex-shrink-0" style={{ width: 20 }}>
-              {!isFirst && <div className="w-px flex-1 bg-gray-200 mb-1" style={{ minHeight: 12 }} />}
-              <motion.div
-                className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                  isFirst
-                    ? "border-gray-300 bg-white"
-                    : "border-transparent"
-                }`}
-                style={!isFirst ? { background: PINK } : {}}
-                animate={!isFirst ? { scale: [1, 1.15, 1] } : {}}
-                transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.3 }}
-              />
-              {i < items.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" style={{ minHeight: 12 }} />}
-            </div>
-            {/* Contenu */}
-            <div className="pb-5 pt-0.5 flex-1">
-              <p className="text-[11px] font-black text-gray-400 tracking-widest">{time}</p>
-              <p className="text-sm font-bold text-gray-800 mt-0.5">{label}</p>
-              {desc && <p className="text-xs text-gray-400 leading-relaxed mt-1">{desc}</p>}
-            </div>
+    <div className="flex flex-col">
+      {items.map(({ time, label, desc }, i) => (
+        <div key={i} className="flex gap-4">
+          <div className="flex flex-col items-center flex-shrink-0" style={{ width: 20 }}>
+            {i > 0 && <div className="w-px bg-gray-200 mb-1" style={{ minHeight: 14 }} />}
+            <motion.div
+              className={`w-3.5 h-3.5 rounded-full flex-shrink-0 mt-0.5 ${
+                i === 0 ? "border-2 border-gray-300 bg-white" : ""
+              }`}
+              style={i > 0 ? { background: PINK } : {}}
+              animate={i > 0 ? { scale: [1, 1.15, 1] } : {}}
+              transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.3 }}
+            />
+            {i < items.length - 1 && <div className="w-px bg-gray-200 mt-1 flex-1" />}
           </div>
-        );
-      })}
+          <div className="pb-5 pt-0.5 flex-1">
+            {time && <p className="text-[11px] font-black text-gray-400 tracking-widest">{time}</p>}
+            <p className="text-sm font-bold text-gray-800 mt-0.5">{label}</p>
+            {desc && <p className="text-xs text-gray-400 leading-relaxed mt-1">{desc}</p>}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 export default function AnniversaireBirthdayParty({ data, guestName, initialStatus, onConfirmParams }: TemplateProps) {
-  const countdown = useCountdown(data.eventDateIso || new Date(Date.now() + 90 * 86400000).toISOString());
+  const countdown = useCountdown(
+    data.eventDateIso || new Date(Date.now() + 90 * 86400000).toISOString()
+  );
 
-  // Timeline depuis customField1 ou défaut
-  const defaultTimeline: TimelineItem[] = [
+  const timelineItems: TimelineItem[] = [
     { time: data.heure || "15:00", label: "Accueil des invités" },
     { time: "", label: "Séance photo" },
-    { time: "", label: "Atelier créatif", desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !" },
+    {
+      time: "",
+      label: "Atelier créatif",
+      desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !",
+    },
   ];
 
-  // Couleurs dress code
   const dresscodeColors = ["#f9c8d9", "#f0a0c0", PINK, "#d44b80"];
 
   const fadeUp = (delay = 0) => ({
@@ -267,36 +269,23 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
     <main className="w-full min-h-screen bg-white" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
       <motion.div initial="hidden" animate="visible" className="flex flex-col">
 
-        {/* ── HERO — photo plein écran + titre ── */}
+        {/* ── HERO ── */}
         <div className="relative w-full overflow-hidden bg-gray-100" style={{ minHeight: 420 }}>
-          {/* Photo de fond */}
-          {data.logoUrl ? (
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url(${data.logoUrl})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center 20%",
-              }}
-            />
-          ) : (
-            // Fond dégradé si pas de photo
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(160deg, #fce8ed 0%, #fff0f4 50%, #ffffff 100%)" }}
-            />
-          )}
-
-          {/* Overlay blanc en bas pour transition douce */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${data.logoUrl || DEMO_IMAGES[0]})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center 20%",
+            }}
+          />
           <div
             className="absolute bottom-0 left-0 right-0"
             style={{
-              height: "50%",
-              background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.85) 70%, #ffffff)",
+              height: "55%",
+              background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.9) 70%, #ffffff)",
             }}
           />
-
-          {/* Titre Birthday Party */}
           <div className="absolute bottom-8 left-6 right-6 z-10">
             <motion.div variants={fadeUp(0.2)}>
               <h1
@@ -305,7 +294,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
                   color: PINK,
                   fontSize: 58,
                   lineHeight: 1,
-                  textShadow: "0 2px 16px rgba(232,84,122,0.2)",
+                  textShadow: "0 2px 16px rgba(232,84,122,0.18)",
                 }}
               >
                 Birthday
@@ -322,8 +311,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
                 PARTY
               </h2>
             </motion.div>
-
-            <motion.p variants={fadeUp(0.4)} className="text-sm text-gray-600 mt-2 italic">
+            <motion.p variants={fadeUp(0.35)} className="text-sm text-gray-600 mt-2 italic">
               Pour <span className="font-bold not-italic" style={{ color: PINK }}>{guestName}</span>
             </motion.p>
           </div>
@@ -334,10 +322,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
 
           {/* Nom & date */}
           <motion.div variants={fadeUp(0.0)} className="pt-2 text-center">
-            <h3
-              className="text-2xl font-black tracking-tight"
-              style={{ color: PINK }}
-            >
+            <h3 className="text-2xl font-black tracking-tight" style={{ color: PINK }}>
               {data.name}
             </h3>
             <p className="text-xs text-gray-400 mt-1 tracking-wider">
@@ -350,29 +335,26 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
             <MiniCalendar dateIso={data.eventDateIso} dateLabel={data.date} />
           </motion.div>
 
-          {/* Grille photos moodboard */}
-          {data.logoUrl && (
-            <motion.div variants={fadeUp(0.08)}>
-              <PhotoGrid logoUrl={data.logoUrl} count={4} />
-              <StarRow />
-            </motion.div>
-          )}
+          {/* Grille photos 1 */}
+          <motion.div variants={fadeUp(0.08)}>
+            <PhotoGrid logoUrl={data.logoUrl} />
+            <StarRow />
+          </motion.div>
 
           {/* Dress-Code */}
           <motion.div variants={fadeUp(0.1)}>
-            <SectionTitle main="ДРЕСС-КОД" sub="dress code" />
+            <SectionTitle main="DRESS-CODE" sub="code vestimentaire" />
             <p className="text-xs text-gray-500 leading-relaxed mb-4">
               {data.customField1Value ||
-                "Un photographe sera présent toute la soirée. Soyez photogénique — adoptez une tenue colorée et vive, les codes roses et joyeux sont les bienvenus !"}
+                "Un photographe sera présent toute la soirée. Soyez photogénique — adoptez une tenue colorée et vive, les teintes roses et joyeuses sont les bienvenues !"}
             </p>
-            {/* Palette couleurs dress code */}
-            <div className="flex gap-2.5">
+            <div className="flex gap-3">
               {dresscodeColors.map((c, i) => (
                 <motion.div
                   key={i}
-                  whileHover={{ scale: 1.12, y: -3 }}
-                  className="rounded-full shadow-sm flex-1 max-w-[48px] aspect-square cursor-pointer"
-                  style={{ background: c, height: 36 }}
+                  whileHover={{ scale: 1.15, y: -3 }}
+                  className="rounded-full shadow-sm cursor-pointer"
+                  style={{ background: c, width: 36, height: 36, flexShrink: 0 }}
                 />
               ))}
             </div>
@@ -380,21 +362,19 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
 
           {/* Cadeau */}
           <motion.div variants={fadeUp(0.12)}>
-            <SectionTitle main="ПОДАРОК" sub="present" />
+            <SectionTitle main="CADEAU" sub="présent" />
             <p className="text-xs text-gray-500 leading-relaxed">
               {data.customField2Value ||
                 "Je sais qu'il est difficile de choisir un cadeau. Une enveloppe avec un petit mot me touchera autant que n'importe quel présent. Si vous souhaitez tout de même m'offrir quelque chose de spécial, je serai ravie de le chérir longtemps."}
             </p>
           </motion.div>
 
-          {/* Deuxième grille photos */}
-          {data.logoUrl && (
-            <motion.div variants={fadeUp(0.14)}>
-              <PhotoGrid logoUrl={data.logoUrl} count={4} />
-            </motion.div>
-          )}
+          {/* Grille photos 2 */}
+          <motion.div variants={fadeUp(0.14)}>
+            <PhotoGrid logoUrl={data.logoUrl} />
+          </motion.div>
 
-          {/* Timing / Timeline */}
+          {/* Timing */}
           <motion.div variants={fadeUp(0.16)}>
             <div className="flex items-center gap-2 mb-3">
               <StarDot />
@@ -402,11 +382,13 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
                 className="text-2xl font-black tracking-[0.06em]"
                 style={{ color: PINK, fontFamily: "Impact, 'Arial Black', sans-serif" }}
               >
-                ТАЙМIНГ
+                TIMING
               </h2>
-              <span className="text-xs italic text-gray-300" style={{ fontFamily: "Georgia, serif" }}>timing</span>
+              <span className="text-xs italic text-gray-300" style={{ fontFamily: "Georgia, serif" }}>
+                programme
+              </span>
             </div>
-            <Timeline items={defaultTimeline} />
+            <Timeline items={timelineItems} />
           </motion.div>
 
           {/* Description */}
@@ -424,7 +406,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
 
           {/* Localisation */}
           <motion.div variants={fadeUp(0.2)}>
-            <SectionTitle main="ЛОКАЦИЯ" sub="location" />
+            <SectionTitle main="LOCALISATION" sub="lieu de la fête" />
             <p className="text-sm font-bold text-gray-800">{data.place}</p>
             {data.heure && (
               <p className="text-xs text-gray-400 mt-0.5">À partir de {data.heure}</p>
@@ -453,7 +435,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
             <div className="flex justify-center items-end gap-1">
               {[
                 { v: countdown.d, l: "Jours" },
-                { v: countdown.h, l: "Hres" },
+                { v: countdown.h, l: "Heures" },
                 { v: countdown.m, l: "Min" },
                 { v: countdown.s, l: "Sec" },
               ].map(({ v, l }, i) => (
@@ -496,7 +478,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
           >
             <StarRow />
             <p
-              className="text-xl text-center font-bold mb-5"
+              className="text-xl text-center font-bold mb-5 mt-2"
               style={{ color: PINK, fontFamily: "'Dancing Script', cursive", fontSize: 24 }}
             >
               Confirmez votre présence
@@ -515,7 +497,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
           </motion.div>
 
           <StarRow />
-          <p className="text-center text-[10px] text-gray-300 tracking-widest">INVYRA</p>
+          <p className="text-center text-[10px] text-gray-300 tracking-widest pb-4">INVYRA</p>
         </div>
       </motion.div>
     </main>
