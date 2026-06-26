@@ -8,6 +8,7 @@ export const revalidate = 0;
 
 import AnniversaireFeteColoree from "@/components/templates/anniversaire/AnniversaireFeteColoree";
 import AnniversaireNeonBirthday from "@/components/templates/anniversaire/AnniversaireNeonBirthday";
+import AnniversaireBirthdayParty from "@/components/templates/anniversaire/AnniversaireBirthdayParty";
 import TemplateSimpleOther from "@/components/templates/autre/TemplateSimpleOther";
 import BaptemeDouceurCeleste from "@/components/templates/bapteme/BaptemeDouceurCeleste";
 import BaptemeSacredLilies from "@/components/templates/bapteme/BaptemeSacredLilies";
@@ -166,6 +167,9 @@ export default async function InvitationPage({ params }: PageProps) {
       )}
       {templateKey === "neon-birthday" && (
         <AnniversaireNeonBirthday data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
+      )}
+      {templateKey === "birthday-party" && (
+        <AnniversaireBirthdayParty data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />
       )}
       {templateKey === "simple-other" && (
         <TemplateSimpleOther data={formattedData} guestName={guest.full_name} initialStatus={currentStatus} onConfirmParams={handleConfirm} />

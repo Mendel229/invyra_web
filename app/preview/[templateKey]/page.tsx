@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import AnniversaireFeteColoree from "@/components/templates/anniversaire/AnniversaireFeteColoree";
 import AnniversaireNeonBirthday from "@/components/templates/anniversaire/AnniversaireNeonBirthday";
+import AnniversaireBirthdayParty from "@/components/templates/anniversaire/AnniversaireBirthdayParty";
 import TemplateSimpleOther from "@/components/templates/autre/TemplateSimpleOther";
 import BaptemeDouceurCeleste from "@/components/templates/bapteme/BaptemeDouceurCeleste";
 import BaptemeSacredLilies from "@/components/templates/bapteme/BaptemeSacredLilies";
@@ -26,7 +27,7 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
   const sp = await searchParams;
 
   const validTemplates = [
-    "anniversaire-colore", "neon-birthday", "simple-other",
+    "anniversaire-colore", "neon-birthday", "birthday-party", "simple-other",
     "bapteme-celeste", "sacred-lilies", "african-tech",
     "executive-summit", "mariage-dore", "midnight-romance",
     "golden-gala", "midnight-accra", "sauge-eukalyptus", "olive-elegant",
@@ -98,6 +99,9 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
       )}
       {templateKey === "neon-birthday" && (
         <AnniversaireNeonBirthday data={previewData as any} guestName={guestName} onConfirmParams={handleDemoConfirm as any} />
+      )}
+      {templateKey === "birthday-party" && (
+        <AnniversaireBirthdayParty data={previewData as any} guestName={guestName} onConfirmParams={handleDemoConfirm as any} />
       )}
       {templateKey === "simple-other" && (
         <TemplateSimpleOther data={previewData as any} guestName={guestName} onConfirmParams={handleDemoConfirm as any} />
