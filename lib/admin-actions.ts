@@ -41,13 +41,27 @@ export async function createTemplateFromRegistry(webTemplateKey: string) {
   if (error) throw new Error(error.message);
 }
 
-/** Met à jour un template existant */
+/** Met à jour un template existant — uniquement les champs modifiables */
 export async function updateTemplate(id: string, updates: Record<string, unknown>) {
-  const { error } = await supabaseAdmin
+  // Filtrer uniquement les champs qu'on peut modifier
+  const allowed = [
+    "name", "description", "event_type", "tier", "web_template_key",
+    "sort_order", "is_animated", "is_popular", "is_active",
+    "config", "preview_url", "preview_images", "tags",
+  ];
+  const filtered: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  for (const key of allowed) {
+    if (key in updates) filtered[key] = updates[key];
+  }
+
+  const { error, data } = await supabaseAdmin
     .from("event_templates")
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    .update(filtered)
+    .eq("id", id)
+    .select("id, config");
+
+  if (error) throw new Error(`Supabase error: ${error.message} (code: ${error.code})`);
+  if (!data || data.length === 0) throw new Error(`Aucune ligne mise à jour pour id=${id} — vérifiez les permissions`);
 }
 
 /** Active ou désactive un template */
