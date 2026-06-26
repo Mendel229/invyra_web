@@ -86,9 +86,30 @@ function EditPanel({
     web_template_key: "", sort_order: 0, is_animated: false, is_popular: false, is_active: true,
     config: {},
   });
-  const [configJson, setConfigJson] = useState(
-    JSON.stringify(template?.config ?? {}, null, 2)
-  );
+
+  // Initialiser configJson : si config est vide ET que la clé est dans le registre,
+  // pré-remplir depuis le registre automatiquement
+  const getInitialConfig = () => {
+    const existingConfig = template?.config;
+    const hasConfig = existingConfig && Object.keys(existingConfig).length > 0;
+    if (hasConfig) return JSON.stringify(existingConfig, null, 2);
+
+    // Config vide — chercher dans le registre
+    const key = template?.web_template_key;
+    if (key) {
+      const reg = TEMPLATES_BY_KEY[key];
+      if (reg) {
+        return JSON.stringify({
+          defaultColors: reg.default_colors,
+          customFields: reg.custom_fields,
+          demoImages: reg.demo_images,
+        }, null, 2);
+      }
+    }
+    return "{}";
+  };
+
+  const [configJson, setConfigJson] = useState(getInitialConfig);
   const [jsonError, setJsonError] = useState("");
   const [error, setError] = useState("");
   const isNew = !template;
@@ -294,6 +315,26 @@ function EditPanel({
         {/* Config JSON */}
         <div>
           <label className={labelCls}>Configuration JSON (couleurs, champs perso, images démo)</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className={labelCls}>Configuration JSON</label>
+            {form.web_template_key && TEMPLATES_BY_KEY[form.web_template_key as string] && (
+              <button
+                type="button"
+                onClick={() => {
+                  const reg = TEMPLATES_BY_KEY[form.web_template_key as string];
+                  setConfigJson(JSON.stringify({
+                    defaultColors: reg.default_colors,
+                    customFields: reg.custom_fields,
+                    demoImages: reg.demo_images,
+                  }, null, 2));
+                  setJsonError("");
+                }}
+                className="text-[10px] text-[#5B21B6] hover:underline font-semibold"
+              >
+                ↺ Recharger depuis le registre
+              </button>
+            )}
+          </div>
           <textarea
             value={configJson}
             onChange={(e) => { setConfigJson(e.target.value); setJsonError(""); }}
