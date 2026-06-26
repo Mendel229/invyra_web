@@ -3,14 +3,15 @@
 import { useState } from "react";
 
 interface RSVPSectionProps {
-  initialStatus: string; // statut actuel de l'invitation depuis la BDD
+  initialStatus: string;
   onConfirm: (status: "accepted" | "declined") => Promise<void>;
-  // Styles injectés par le template pour s'adapter au design
   acceptClassName?: string;
   declineClassName?: string;
   acceptLabel?: string;
   declineLabel?: string;
   wrapperClassName?: string;
+  acceptStyle?: React.CSSProperties;
+  declineStyle?: React.CSSProperties;
 }
 
 export default function RSVPSection({
@@ -21,6 +22,8 @@ export default function RSVPSection({
   acceptLabel = "Je participe",
   declineLabel = "Je décline",
   wrapperClassName = "mt-7 grid grid-cols-2 gap-3",
+  acceptStyle,
+  declineStyle,
 }: RSVPSectionProps) {
   const [status, setStatus] = useState<string>(initialStatus);
   const [loading, setLoading] = useState<"accepted" | "declined" | null>(null);
@@ -96,6 +99,7 @@ export default function RSVPSection({
         onClick={() => setShowConfirm("accepted")}
         disabled={loading !== null}
         className={`${acceptClassName} disabled:opacity-60`}
+        style={acceptStyle}
       >
         {loading === "accepted" ? "Envoi..." : acceptLabel}
       </button>
@@ -103,6 +107,7 @@ export default function RSVPSection({
         onClick={() => setShowConfirm("declined")}
         disabled={loading !== null}
         className={`${declineClassName} disabled:opacity-60`}
+        style={declineStyle}
       >
         {loading === "declined" ? "Envoi..." : declineLabel}
       </button>

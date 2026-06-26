@@ -1,7 +1,7 @@
 "use client";
 import RSVPSection from "@/components/RSVPSection";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export interface InvitationData {
   name: string;
@@ -27,6 +27,11 @@ export interface TemplateProps {
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
+// ─── Couleur principale ───────────────────────────────────────────────────────
+const PINK = "#e8547a";
+const PINK_LIGHT = "#fce8ed";
+const PINK_BORDER = "#f7c4d0";
+
 // ─── Countdown ────────────────────────────────────────────────────────────────
 function useCountdown(dateStr: string) {
   const [t, setT] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -49,16 +54,28 @@ function useCountdown(dateStr: string) {
   return t;
 }
 
-// ─── Étoiles décoratives ──────────────────────────────────────────────────────
-function Stars({ count = 6, color = "#e879a0" }: { count?: number; color?: string }) {
+// ─── Étoile déco ─────────────────────────────────────────────────────────────
+function StarDot({ color = PINK }: { color?: string }) {
   return (
-    <div className="flex gap-1 justify-center my-1">
-      {Array.from({ length: count }).map((_, i) => (
+    <motion.span
+      animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.4, 1, 0.4] }}
+      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      style={{ color, fontSize: 11, display: "inline-block" }}
+    >
+      ✦
+    </motion.span>
+  );
+}
+
+function StarRow() {
+  return (
+    <div className="flex justify-center gap-3 my-1">
+      {[0, 1, 2, 3].map((i) => (
         <motion.span
           key={i}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-          transition={{ duration: 2 + i * 0.3, repeat: Infinity, delay: i * 0.2 }}
-          style={{ color, fontSize: 10 }}
+          animate={{ scale: [0.7, 1.1, 0.7], opacity: [0.3, 0.9, 0.3] }}
+          transition={{ duration: 2 + i * 0.4, repeat: Infinity, delay: i * 0.3 }}
+          style={{ color: PINK, fontSize: i % 2 === 0 ? 8 : 11 }}
         >
           ✦
         </motion.span>
@@ -67,10 +84,33 @@ function Stars({ count = 6, color = "#e879a0" }: { count?: number; color?: strin
   );
 }
 
+// ─── Section titre ────────────────────────────────────────────────────────────
+function SectionTitle({ main, sub }: { main: string; sub?: string }) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-2 mb-0.5">
+        <StarDot />
+        <h2
+          className="text-2xl font-black tracking-[0.06em] leading-none"
+          style={{ color: PINK, fontFamily: "Impact, 'Arial Black', sans-serif" }}
+        >
+          {main}
+        </h2>
+      </div>
+      {sub && (
+        <p className="text-xs italic text-gray-300 ml-5" style={{ fontFamily: "Georgia, serif" }}>
+          {sub}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Mini calendrier ──────────────────────────────────────────────────────────
 function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLabel: string }) {
   let month = "Octobre";
   let targetDay = 14;
+  let year = 2026;
 
   if (dateIso) {
     try {
@@ -78,333 +118,404 @@ function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLab
       month = d.toLocaleDateString("fr-FR", { month: "long" });
       month = month.charAt(0).toUpperCase() + month.slice(1);
       targetDay = d.getDate();
+      year = d.getFullYear();
     } catch (_) {}
   }
 
-  const days = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
-  const offset = 1; // décalage début mois (lundi=1)
+  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  // Utiliser décalage réel si possible
+  let offset = 1;
+  if (dateIso) {
+    try {
+      const firstDay = new Date(new Date(dateIso).getFullYear(), new Date(dateIso).getMonth(), 1);
+      offset = (firstDay.getDay() + 6) % 7; // 0=lundi
+    } catch (_) {}
+  }
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-pink-100">
-      <p className="text-center text-[#e879a0] text-xs font-semibold uppercase tracking-widest mb-2">{month}</p>
+    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+      <p className="text-center text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">
+        {month} {year}
+      </p>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {days.map((d) => (
-          <span key={d} className="text-[9px] text-gray-400 font-bold pb-1">{d}</span>
+          <span key={d} className="text-[9px] text-gray-400 font-semibold pb-1">{d}</span>
         ))}
-        {Array.from({ length: 35 }, (_, i) => {
-          const day = i - offset + 1;
+        {Array.from({ length: offset }).map((_, i) => <span key={`e${i}`} />)}
+        {Array.from({ length: 31 }, (_, i) => {
+          const day = i + 1;
           const isTarget = day === targetDay;
-          return day > 0 && day <= 31 ? (
+          return (
             <motion.span
-              key={i}
-              className={`text-[10px] py-0.5 rounded-full mx-auto w-5 h-5 flex items-center justify-center ${
-                isTarget ? "bg-[#e879a0] text-white font-bold shadow-sm" : "text-gray-500"
+              key={day}
+              className={`text-[10px] mx-auto w-5 h-5 flex items-center justify-center rounded-full font-medium ${
+                isTarget
+                  ? "font-black text-white shadow-sm"
+                  : "text-gray-500"
               }`}
-              animate={isTarget ? { scale: [1, 1.15, 1] } : {}}
-              transition={{ duration: 2, repeat: Infinity }}
+              style={isTarget ? { background: PINK } : {}}
+              animate={isTarget ? { scale: [1, 1.2, 1] } : {}}
+              transition={isTarget ? { duration: 2, repeat: Infinity } : {}}
             >
               {day}
             </motion.span>
-          ) : <span key={i} />;
+          );
         })}
       </div>
-      <p className="text-center text-[#e879a0] text-[10px] mt-2 italic">{dateLabel}</p>
+      <div className="flex justify-center mt-3">
+        <span className="text-[10px] italic text-gray-400">{dateLabel}</span>
+      </div>
     </div>
   );
 }
 
-// ─── Collage Polaroid ─────────────────────────────────────────────────────────
-function PolaroidCollage({ logoUrl }: { logoUrl?: string }) {
+// ─── Grille photos style moodboard ───────────────────────────────────────────
+function PhotoGrid({ logoUrl, count = 4 }: { logoUrl?: string; count?: number }) {
   if (!logoUrl) return null;
 
-  const rotations = [-3, 2, -1.5, 3, -2];
+  // Grille 2x2 comme dans l'image de référence
+  const positions = [
+    { className: "col-span-2 row-span-1", height: "h-36" },  // large en haut
+    { className: "col-span-1 row-span-1", height: "h-28" },
+    { className: "col-span-1 row-span-1", height: "h-28" },
+    { className: "col-span-2 row-span-1", height: "h-28" },  // large en bas
+  ];
 
   return (
-    <div className="relative h-64 w-full">
-      {rotations.map((rot, i) => (
+    <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden">
+      {positions.slice(0, count).map((pos, i) => (
         <motion.div
           key={i}
-          initial={{ opacity: 0, scale: 0.8, rotate: rot - 5 }}
-          animate={{ opacity: 1, scale: 1, rotate: rot }}
-          transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-          className="absolute bg-white p-2 shadow-md"
-          style={{
-            width: i === 0 ? 120 : 90,
-            height: i === 0 ? 140 : 110,
-            left: `${[10, 35, 60, 15, 50][i]}%`,
-            top: `${[5, 20, 5, 50, 45][i]}%`,
-            zIndex: i,
-          }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: i * 0.08, duration: 0.5 }}
+          className={`${pos.className} ${pos.height} overflow-hidden rounded-xl`}
         >
-          <img src={logoUrl} alt="" className="w-full object-cover" style={{ height: "85%" }} />
+          <img
+            src={logoUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ filter: i % 2 === 0 ? "none" : "brightness(0.92) saturate(1.1)" }}
+          />
         </motion.div>
       ))}
     </div>
   );
 }
 
-// ─── Timeline ─────────────────────────────────────────────────────────────────
-function Timeline({ heure }: { heure?: string }) {
-  const baseHour = heure ? parseInt(heure.split(":")[0], 10) : 15;
-  const events = [
-    { time: `${String(baseHour).padStart(2, "0")}:00`, label: "Accueil des invités", dot: "empty" },
-    { time: `${String(baseHour).padStart(2, "0")}:15`, label: "Séance photo", dot: "filled" },
-    { time: `${String(baseHour + 1).padStart(2, "0")}:00`, label: "Animation & surprises", desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !", dot: "filled" },
-  ];
+// ─── Timeline verticale ───────────────────────────────────────────────────────
+interface TimelineItem { time: string; label: string; desc?: string }
 
+function Timeline({ items }: { items: TimelineItem[] }) {
   return (
-    <div className="flex flex-col">
-      {events.map(({ time, label, desc, dot }, i) => (
-        <div key={i} className="flex gap-3">
-          {/* Ligne + point */}
-          <div className="flex flex-col items-center" style={{ minWidth: 16 }}>
-            {i > 0 && <div className="w-px flex-1 bg-gray-200 mb-1" />}
-            <motion.div
-              className={`w-3.5 h-3.5 rounded-full flex-shrink-0 mt-1 ${dot === "filled" ? "bg-[#e879a0]" : "border-2 border-gray-300 bg-white"}`}
-              animate={dot === "filled" ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            {i < events.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
+    <div className="flex flex-col gap-0">
+      {items.map(({ time, label, desc }, i) => {
+        const isFirst = i === 0;
+        return (
+          <div key={i} className="flex gap-4">
+            {/* Ligne + cercle */}
+            <div className="flex flex-col items-center flex-shrink-0" style={{ width: 20 }}>
+              {!isFirst && <div className="w-px flex-1 bg-gray-200 mb-1" style={{ minHeight: 12 }} />}
+              <motion.div
+                className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
+                  isFirst
+                    ? "border-gray-300 bg-white"
+                    : "border-transparent"
+                }`}
+                style={!isFirst ? { background: PINK } : {}}
+                animate={!isFirst ? { scale: [1, 1.15, 1] } : {}}
+                transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.3 }}
+              />
+              {i < items.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" style={{ minHeight: 12 }} />}
+            </div>
+            {/* Contenu */}
+            <div className="pb-5 pt-0.5 flex-1">
+              <p className="text-[11px] font-black text-gray-400 tracking-widest">{time}</p>
+              <p className="text-sm font-bold text-gray-800 mt-0.5">{label}</p>
+              {desc && <p className="text-xs text-gray-400 leading-relaxed mt-1">{desc}</p>}
+            </div>
           </div>
-          {/* Texte */}
-          <div className="pb-4">
-            <p className="text-[10px] text-[#e879a0] font-bold">{time}</p>
-            <p className="text-sm text-gray-700 font-semibold">{label}</p>
-            {desc && <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">{desc}</p>}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 export default function AnniversaireBirthdayParty({ data, guestName, initialStatus, onConfirmParams }: TemplateProps) {
-  const countdown = useCountdown(data.eventDateIso || data.date);
+  const countdown = useCountdown(data.eventDateIso || new Date(Date.now() + 90 * 86400000).toISOString());
+
+  // Timeline depuis customField1 ou défaut
+  const defaultTimeline: TimelineItem[] = [
+    { time: data.heure || "15:00", label: "Accueil des invités" },
+    { time: "", label: "Séance photo" },
+    { time: "", label: "Atelier créatif", desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !" },
+  ];
+
+  // Couleurs dress code
+  const dresscodeColors = ["#f9c8d9", "#f0a0c0", PINK, "#d44b80"];
 
   const fadeUp = (delay = 0) => ({
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as const } },
+    hidden: { opacity: 0, y: 18 },
+    visible: {
+      opacity: 1, y: 0,
+      transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
+    },
   });
 
-  const pinkPalette = ["#f9c8d9", "#f0a0c0", "#e879a0", "#d44b80"];
-
   return (
-    <main
-      className="w-full min-h-screen"
-      style={{ background: "linear-gradient(180deg, #fff5f8 0%, #ffffff 40%)", fontFamily: "Georgia, serif" }}
-    >
+    <main className="w-full min-h-screen bg-white" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
       <motion.div initial="hidden" animate="visible" className="flex flex-col">
 
-        {/* ── Hero — fond photo avec overlay ── */}
-        <div className="relative w-full overflow-hidden" style={{ minHeight: 340 }}>
-          {data.logoUrl && (
+        {/* ── HERO — photo plein écran + titre ── */}
+        <div className="relative w-full overflow-hidden bg-gray-100" style={{ minHeight: 420 }}>
+          {/* Photo de fond */}
+          {data.logoUrl ? (
             <div
               className="absolute inset-0"
               style={{
                 backgroundImage: `url(${data.logoUrl})`,
                 backgroundSize: "cover",
-                backgroundPosition: "center top",
-                filter: "brightness(0.55)",
+                backgroundPosition: "center 20%",
               }}
             />
+          ) : (
+            // Fond dégradé si pas de photo
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(160deg, #fce8ed 0%, #fff0f4 50%, #ffffff 100%)" }}
+            />
           )}
-          {/* Overlay dégradé blanc en bas */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#fff5f8] to-transparent" />
 
-          <div className="relative z-10 flex flex-col items-center justify-center pt-16 pb-10 px-6">
-            <motion.div
-              variants={fadeUp(0.1)}
-              className="text-center"
-            >
+          {/* Overlay blanc en bas pour transition douce */}
+          <div
+            className="absolute bottom-0 left-0 right-0"
+            style={{
+              height: "50%",
+              background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.85) 70%, #ffffff)",
+            }}
+          />
+
+          {/* Titre Birthday Party */}
+          <div className="absolute bottom-8 left-6 right-6 z-10">
+            <motion.div variants={fadeUp(0.2)}>
               <h1
-                className="text-6xl leading-tight text-white drop-shadow-[0_2px_12px_rgba(232,121,160,0.6)]"
-                style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", color: "#fff" }}
+                style={{
+                  fontFamily: "'Dancing Script', 'Brush Script MT', cursive",
+                  color: PINK,
+                  fontSize: 58,
+                  lineHeight: 1,
+                  textShadow: "0 2px 16px rgba(232,84,122,0.2)",
+                }}
               >
                 Birthday
               </h1>
               <h2
-                className="text-3xl font-black uppercase tracking-[0.18em] text-white mt-1"
-                style={{ letterSpacing: "0.3em" }}
+                style={{
+                  fontFamily: "Impact, 'Arial Black', sans-serif",
+                  color: PINK,
+                  fontSize: 28,
+                  letterSpacing: "0.22em",
+                  marginTop: 2,
+                }}
               >
                 PARTY
               </h2>
             </motion.div>
 
-            <Stars count={5} color="#ffd6e8" />
-
-            <motion.p variants={fadeUp(0.3)} className="text-white/90 text-sm mt-2 italic text-center">
-              Pour : <span className="font-bold not-italic">{guestName}</span>
+            <motion.p variants={fadeUp(0.4)} className="text-sm text-gray-600 mt-2 italic">
+              Pour <span className="font-bold not-italic" style={{ color: PINK }}>{guestName}</span>
             </motion.p>
           </div>
         </div>
 
-        {/* ── Corps ── */}
-        <div className="px-5 pb-12 flex flex-col gap-6 -mt-2">
+        {/* ── CORPS ── */}
+        <div className="px-5 pb-14 flex flex-col gap-7 bg-white">
 
-          {/* Nom + date */}
-          <motion.div variants={fadeUp(0.05)} className="text-center">
+          {/* Nom & date */}
+          <motion.div variants={fadeUp(0.0)} className="pt-2 text-center">
             <h3
-              className="text-3xl text-[#e879a0]"
-              style={{ fontFamily: "'Dancing Script', cursive" }}
+              className="text-2xl font-black tracking-tight"
+              style={{ color: PINK }}
             >
               {data.name}
             </h3>
-            <p className="text-gray-500 text-sm mt-1">{data.heure ? `${data.date} · ${data.heure}` : data.date}</p>
+            <p className="text-xs text-gray-400 mt-1 tracking-wider">
+              {data.heure ? `${data.date} · ${data.heure}` : data.date}
+            </p>
           </motion.div>
 
-          {/* Mini calendrier */}
-          <motion.div variants={fadeUp(0.1)}>
+          {/* Calendrier */}
+          <motion.div variants={fadeUp(0.05)}>
             <MiniCalendar dateIso={data.eventDateIso} dateLabel={data.date} />
           </motion.div>
 
-          {/* Collage polaroid */}
+          {/* Grille photos moodboard */}
           {data.logoUrl && (
-            <motion.div variants={fadeUp(0.12)}>
-              <PolaroidCollage logoUrl={data.logoUrl} />
+            <motion.div variants={fadeUp(0.08)}>
+              <PhotoGrid logoUrl={data.logoUrl} count={4} />
+              <StarRow />
             </motion.div>
           )}
 
-          {/* Countdown */}
-          <motion.div variants={fadeUp(0.14)} className="bg-white rounded-2xl p-4 shadow-sm border border-pink-100">
-            <p className="text-center text-[#e879a0] text-xs uppercase tracking-widest mb-3">Compte à rebours</p>
-            <div className="flex justify-center gap-2">
-              {[
-                { v: countdown.d, l: "Jours" },
-                { v: countdown.h, l: "Heures" },
-                { v: countdown.m, l: "Min" },
-                { v: countdown.s, l: "Sec" },
-              ].map(({ v, l }, i) => (
-                <div key={l} className="flex items-center gap-1">
-                  {i > 0 && <span className="text-[#e879a0] text-lg font-bold mb-3">:</span>}
-                  <div className="flex flex-col items-center">
-                    <motion.span
-                      key={v}
-                      initial={{ scale: 1.1 }}
-                      animate={{ scale: 1 }}
-                      className="text-2xl font-black text-[#e879a0] tabular-nums w-9 text-center"
-                    >
-                      {String(v).padStart(2, "0")}
-                    </motion.span>
-                    <span className="text-[9px] text-gray-400 uppercase tracking-wider">{l}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Timeline */}
-          <motion.div variants={fadeUp(0.16)} className="bg-white rounded-2xl p-5 shadow-sm border border-pink-100">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-[#e879a0] text-lg">✦</span>
-              <p className="text-[#e879a0] font-black uppercase tracking-[0.2em] text-sm">Timing</p>
-              <span className="text-gray-300 text-xs italic">timeline</span>
-            </div>
-            <Timeline heure={data.heure} />
-          </motion.div>
-
-          {/* Dress code */}
-          <motion.div variants={fadeUp(0.18)} className="bg-white rounded-2xl p-5 shadow-sm border border-pink-100">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[#e879a0] text-lg">✦</span>
-              <p className="text-[#e879a0] font-black uppercase tracking-[0.2em] text-sm">Dress-Code</p>
-            </div>
-            <p className="text-gray-500 text-xs leading-relaxed mb-4">
+          {/* Dress-Code */}
+          <motion.div variants={fadeUp(0.1)}>
+            <SectionTitle main="ДРЕСС-КОД" sub="dress code" />
+            <p className="text-xs text-gray-500 leading-relaxed mb-4">
               {data.customField1Value ||
-                "Un photographe sera présent. Adoptez une tenue colorée et lumineuse — les codes roses et vifs sont les bienvenus !"}
+                "Un photographe sera présent toute la soirée. Soyez photogénique — adoptez une tenue colorée et vive, les codes roses et joyeux sont les bienvenus !"}
             </p>
-            {/* Palette de couleurs */}
-            <div className="flex gap-2 mb-1">
-              {pinkPalette.map((c) => (
+            {/* Palette couleurs dress code */}
+            <div className="flex gap-2.5">
+              {dresscodeColors.map((c, i) => (
                 <motion.div
-                  key={c}
-                  whileHover={{ scale: 1.15, y: -3 }}
-                  className="w-8 h-8 rounded-full shadow-sm cursor-pointer"
-                  style={{ background: c }}
+                  key={i}
+                  whileHover={{ scale: 1.12, y: -3 }}
+                  className="rounded-full shadow-sm flex-1 max-w-[48px] aspect-square cursor-pointer"
+                  style={{ background: c, height: 36 }}
                 />
               ))}
             </div>
           </motion.div>
 
           {/* Cadeau */}
-          <motion.div variants={fadeUp(0.2)} className="bg-white rounded-2xl p-5 shadow-sm border border-pink-100">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[#e879a0] text-lg">✦</span>
-              <p className="text-[#e879a0] font-black uppercase tracking-[0.2em] text-sm">Cadeau</p>
-              <span className="text-gray-300 text-xs italic">present</span>
-            </div>
-            <p className="text-gray-500 text-xs leading-relaxed">
+          <motion.div variants={fadeUp(0.12)}>
+            <SectionTitle main="ПОДАРОК" sub="present" />
+            <p className="text-xs text-gray-500 leading-relaxed">
               {data.customField2Value ||
                 "Je sais qu'il est difficile de choisir un cadeau. Une enveloppe avec un petit mot me touchera autant que n'importe quel présent. Si vous souhaitez tout de même m'offrir quelque chose de spécial, je serai ravie de le chérir longtemps."}
             </p>
           </motion.div>
 
-          {/* Description / message perso */}
+          {/* Deuxième grille photos */}
+          {data.logoUrl && (
+            <motion.div variants={fadeUp(0.14)}>
+              <PhotoGrid logoUrl={data.logoUrl} count={4} />
+            </motion.div>
+          )}
+
+          {/* Timing / Timeline */}
+          <motion.div variants={fadeUp(0.16)}>
+            <div className="flex items-center gap-2 mb-3">
+              <StarDot />
+              <h2
+                className="text-2xl font-black tracking-[0.06em]"
+                style={{ color: PINK, fontFamily: "Impact, 'Arial Black', sans-serif" }}
+              >
+                ТАЙМIНГ
+              </h2>
+              <span className="text-xs italic text-gray-300" style={{ fontFamily: "Georgia, serif" }}>timing</span>
+            </div>
+            <Timeline items={defaultTimeline} />
+          </motion.div>
+
+          {/* Description */}
           {data.description && (
             <motion.div
-              variants={fadeUp(0.22)}
-              className="bg-gradient-to-br from-pink-50 to-white rounded-2xl p-5 border border-pink-100"
+              variants={fadeUp(0.18)}
+              className="rounded-2xl p-4 border"
+              style={{ background: PINK_LIGHT, borderColor: PINK_BORDER }}
             >
-              <p className="text-gray-600 text-sm italic text-center leading-relaxed">
+              <p className="text-sm italic text-gray-600 text-center leading-relaxed">
                 "{data.description}"
               </p>
             </motion.div>
           )}
 
           {/* Localisation */}
-          <motion.div variants={fadeUp(0.24)} className="bg-white rounded-2xl p-5 shadow-sm border border-pink-100">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[#e879a0] text-lg">✦</span>
-              <p className="text-[#e879a0] font-black uppercase tracking-[0.2em] text-sm">Localisation</p>
-              <span className="text-gray-300 text-xs italic">location</span>
-            </div>
-            <p className="text-gray-700 text-sm font-semibold">{data.place}</p>
+          <motion.div variants={fadeUp(0.2)}>
+            <SectionTitle main="ЛОКАЦИЯ" sub="location" />
+            <p className="text-sm font-bold text-gray-800">{data.place}</p>
             {data.heure && (
-              <p className="text-gray-400 text-xs mt-1">À partir de {data.heure}</p>
+              <p className="text-xs text-gray-400 mt-0.5">À partir de {data.heure}</p>
             )}
-            <motion.button
+            <motion.a
               whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="mt-3 w-full py-2 rounded-full border border-[#e879a0] text-[#e879a0] text-xs font-semibold"
+              whileTap={{ scale: 0.97 }}
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              className="mt-3 block w-full py-2.5 rounded-full text-xs font-bold text-center tracking-wider border"
+              style={{ borderColor: PINK_BORDER, color: PINK }}
             >
               Ouvrir sur la carte →
-            </motion.button>
+            </motion.a>
+          </motion.div>
+
+          {/* Countdown */}
+          <motion.div
+            variants={fadeUp(0.22)}
+            className="rounded-2xl p-4 border"
+            style={{ background: PINK_LIGHT, borderColor: PINK_BORDER }}
+          >
+            <p className="text-center text-xs font-bold tracking-[0.2em] uppercase mb-3" style={{ color: PINK }}>
+              Compte à rebours
+            </p>
+            <div className="flex justify-center items-end gap-1">
+              {[
+                { v: countdown.d, l: "Jours" },
+                { v: countdown.h, l: "Hres" },
+                { v: countdown.m, l: "Min" },
+                { v: countdown.s, l: "Sec" },
+              ].map(({ v, l }, i) => (
+                <div key={l} className="flex items-end gap-1">
+                  {i > 0 && <span className="text-xl font-black mb-4" style={{ color: PINK }}>:</span>}
+                  <div className="flex flex-col items-center">
+                    <motion.span
+                      key={v}
+                      initial={{ scale: 1.1 }}
+                      animate={{ scale: 1 }}
+                      className="text-3xl font-black tabular-nums w-10 text-center"
+                      style={{ color: PINK }}
+                    >
+                      {String(v).padStart(2, "0")}
+                    </motion.span>
+                    <span className="text-[9px] tracking-wider text-gray-400 uppercase">{l}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           {/* QR Code */}
           {data.qrCodeUrl && (
-            <motion.div variants={fadeUp(0.26)} className="flex flex-col items-center gap-2">
-              <Stars count={4} />
-              <p className="text-gray-400 text-xs uppercase tracking-widest">Votre invitation</p>
-              <div className="bg-white p-3 rounded-2xl shadow-sm border border-pink-100">
-                <img src={data.qrCodeUrl} alt="QR Code" className="w-24 h-24 rounded-xl" />
+            <motion.div variants={fadeUp(0.24)} className="flex flex-col items-center gap-2">
+              <StarRow />
+              <p className="text-xs tracking-widest text-gray-400 uppercase">Votre invitation</p>
+              <div className="bg-white p-3 rounded-2xl shadow-sm border" style={{ borderColor: PINK_BORDER }}>
+                <img src={data.qrCodeUrl} alt="QR Code" className="w-28 h-28 rounded-xl" />
               </div>
               <p className="text-gray-400 text-[10px] italic">{guestName}</p>
             </motion.div>
           )}
 
           {/* RSVP */}
-          <motion.div variants={fadeUp(0.28)} className="bg-white rounded-2xl p-6 shadow-sm border border-pink-100">
-            <Stars count={5} />
+          <motion.div
+            variants={fadeUp(0.26)}
+            className="rounded-2xl p-6 border"
+            style={{ borderColor: PINK_BORDER }}
+          >
+            <StarRow />
             <p
-              className="text-2xl text-[#e879a0] text-center mb-4"
-              style={{ fontFamily: "'Dancing Script', cursive" }}
+              className="text-xl text-center font-bold mb-5"
+              style={{ color: PINK, fontFamily: "'Dancing Script', cursive", fontSize: 24 }}
             >
               Confirmez votre présence
             </p>
             <RSVPSection
               initialStatus={initialStatus ?? "brouillon"}
               onConfirm={onConfirmParams ?? (async () => {})}
-              acceptClassName="w-full rounded-full bg-[#e879a0] py-3 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(232,121,160,0.4)]"
-              declineClassName="w-full rounded-full border border-[#e879a0]/40 bg-white py-3 text-sm font-semibold text-[#e879a0]"
+              acceptClassName="w-full rounded-full py-3 text-sm font-bold text-white"
+              declineClassName="w-full rounded-full border py-3 text-sm font-bold"
               acceptLabel="Je serai là ! 🎉"
               declineLabel="Je ne pourrai pas venir"
               wrapperClassName="flex flex-col gap-3"
+              acceptStyle={{ background: PINK }}
+              declineStyle={{ borderColor: PINK_BORDER, color: PINK }}
             />
           </motion.div>
 
-          <Stars count={6} />
-          <p className="text-center text-[10px] text-gray-300">Créé avec INVYRA</p>
+          <StarRow />
+          <p className="text-center text-[10px] text-gray-300 tracking-widest">INVYRA</p>
         </div>
       </motion.div>
     </main>
