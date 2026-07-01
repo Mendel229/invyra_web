@@ -83,8 +83,10 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
     customField1Value: str("cf1_value", "") || undefined,
     customField2Label: str("cf2_label", "") || undefined,
     customField2Value: str("cf2_value", "") || undefined,
-    // Date ISO pour les countdowns — 6 mois dans le futur par défaut en démo
     eventDateIso: (sp["event_date"] as string) || new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString(),
+    // Couleur principale depuis la customization de l'event
+    primaryColor: str("primary_color", "") || undefined,
+    customization: {},
   };
 
   const guestName = "Prénom Nom (Aperçu)";
