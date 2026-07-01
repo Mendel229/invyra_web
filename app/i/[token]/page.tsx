@@ -80,7 +80,7 @@ export default async function InvitationPage({ params }: PageProps) {
 
     supabaseAdmin
       .from("events")
-      .select("id, name, event_type, event_date, place, description, metadata, template_id, logo_url")
+      .select("id, name, event_type, event_date, place, description, metadata, template_id, logo_url, customization")
       .eq("id", invitationRecord.event_id)
       .single(),
   ]);
@@ -127,8 +127,10 @@ export default async function InvitationPage({ params }: PageProps) {
     customField1Value: event.metadata?.customField1Value,
     customField2Label: event.metadata?.customField2Label,
     customField2Value: event.metadata?.customField2Value,
-    // Date ISO brute pour les countdowns
     eventDateIso: event.event_date ?? null,
+    // Personnalisation du template (couleurs, champs spécifiques)
+    customization: event.customization ?? {},
+    primaryColor: (event.customization as any)?.primaryColor ?? undefined,
   };
 
   // SERVER ACTION POUR LA CONFIRMATION (RSVP)
