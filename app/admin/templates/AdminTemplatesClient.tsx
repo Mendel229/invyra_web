@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import {
   createTemplateFromRegistry,
   updateTemplate,
@@ -80,7 +80,6 @@ function Btn({
 function EditPanel({
   template, onClose, onSaved,
 }: { template: DbTemplate | null; onClose: () => void; onSaved: () => void }) {
-  const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<Partial<DbTemplate>>(template ?? {
     name: "", description: "", event_type: "mariage", tier: "gratuit",
     web_template_key: "", sort_order: 0, is_animated: false, is_popular: false, is_active: true,
@@ -117,7 +116,9 @@ function EditPanel({
   const set = (key: keyof DbTemplate, value: unknown) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
     setError("");
     let config: Record<string, unknown> = {};
     try {
@@ -128,29 +129,30 @@ function EditPanel({
       return;
     }
 
-    startTransition(async () => {
-      try {
-        if (isNew) {
-          await createTemplateManual({
-            name: form.name ?? "",
-            description: form.description ?? "",
-            event_type: form.event_type ?? "autre",
-            tier: form.tier ?? "gratuit",
-            web_template_key: form.web_template_key ?? "",
-            sort_order: form.sort_order ?? 0,
-            is_animated: form.is_animated ?? false,
-            is_popular: form.is_popular ?? false,
-            config,
-          });
-        } else {
-          await updateTemplate(template!.id, { ...form, config });
-        }
-        onSaved();
-        onClose();
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Erreur inconnue");
+    setSaving(true);
+    try {
+      if (isNew) {
+        await createTemplateManual({
+          name: form.name ?? "",
+          description: form.description ?? "",
+          event_type: form.event_type ?? "autre",
+          tier: form.tier ?? "gratuit",
+          web_template_key: form.web_template_key ?? "",
+          sort_order: form.sort_order ?? 0,
+          is_animated: form.is_animated ?? false,
+          is_popular: form.is_popular ?? false,
+          config,
+        });
+      } else {
+        await updateTemplate(template!.id, { ...form, config });
       }
-    });
+      onSaved();
+      onClose();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur inconnue");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#5B21B6] bg-white";
@@ -348,8 +350,8 @@ function EditPanel({
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
-          <Btn onClick={handleSave} disabled={isPending} className="flex-1">
-            {isPending ? "Enregistrement..." : isNew ? "Créer le template" : "Enregistrer"}
+          <Btn onClick={handleSave} disabled={saving} className="flex-1">
+            {saving ? "Enregistrement..." : isNew ? "Créer le template" : "Enregistrer"}
           </Btn>
           <Btn onClick={onClose} variant="ghost">Annuler</Btn>
         </div>
@@ -361,62 +363,50 @@ function EditPanel({
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function AdminTemplatesClient({ dbTemplates, unregisteredTemplates }: Props) {
   const [templates, setTemplates] = useState<DbTemplate[]>(dbTemplates);
-  const [unregistered, setUnregistered] = useState<TemplateRegistryEntry[]>(unregisteredTemplates);
-  const [editTarget, setEditTarget] = useState<DbTemplate | null | undefined>(undefined); // undefined = fermé
-  const [isPending, startTransition] = useTransition();
+  const [unregistered] = useState<TemplateRegistryEntry[]>(unregisteredTemplates);
+  const [editTarget, setEditTarget] = useState<DbTemplate | null | undefined>(undefined);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const showToast = (msg: string, type: "ok" | "err" = "ok") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const refresh = async () => {
-    // Re-fetch via Server Action
-    const { getDbTemplates } = await import("@/lib/admin-actions");
-    const fresh = await getDbTemplates();
-    setTemplates(fresh);
-    const freshKeys = new Set(fresh.map((t: DbTemplate) => t.web_template_key));
-    setUnregistered(
-      (unregisteredTemplates).filter((t) => !freshKeys.has(t.web_template_key))
-    );
+  const refresh = () => {
+    // Recharger la page pour voir les données fraîches depuis le serveur
+    window.location.reload();
   };
 
-  const handleRegister = (key: string) => {
-    startTransition(async () => {
-      try {
-        await createTemplateFromRegistry(key);
-        await refresh();
-        showToast(`Template "${key}" enregistré en base ✓`);
-      } catch (e: unknown) {
-        showToast(e instanceof Error ? e.message : "Erreur", "err");
-      }
-    });
+  const handleRegister = async (key: string) => {
+    try {
+      await createTemplateFromRegistry(key);
+      refresh();
+      showToast(`Template "${key}" enregistre en base`);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Erreur", "err");
+    }
   };
 
-  const handleToggle = (id: string, current: boolean) => {
-    startTransition(async () => {
-      try {
-        await toggleTemplateActive(id, !current);
-        setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, is_active: !current } : t));
-        showToast(`Template ${!current ? "activé" : "désactivé"} ✓`);
-      } catch (e: unknown) {
-        showToast(e instanceof Error ? e.message : "Erreur", "err");
-      }
-    });
+  const handleToggle = async (id: string, current: boolean) => {
+    try {
+      await toggleTemplateActive(id, !current);
+      setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, is_active: !current } : t));
+      showToast(`Template ${!current ? "active" : "desactive"}`);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Erreur", "err");
+    }
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (!confirm(`Supprimer "${name}" de la base ? Cette action est irréversible.`)) return;
-    startTransition(async () => {
-      try {
-        await deleteTemplate(id);
-        setTemplates((prev) => prev.filter((t) => t.id !== id));
-        showToast(`"${name}" supprimé ✓`);
-      } catch (e: unknown) {
-        showToast(e instanceof Error ? e.message : "Erreur", "err");
-      }
-    });
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Supprimer "${name}" ? Cette action est irreversible.`)) return;
+    try {
+      await deleteTemplate(id);
+      setTemplates((prev) => prev.filter((t) => t.id !== id));
+      showToast(`"${name}" supprime`);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Erreur", "err");
+    }
   };
 
   const grouped = EVENT_TYPES.reduce<Record<string, DbTemplate[]>>((acc, type) => {
@@ -488,7 +478,7 @@ export default function AdminTemplatesClient({ dbTemplates, unregisteredTemplate
                   </div>
                   <Btn
                     onClick={() => handleRegister(t.web_template_key)}
-                    disabled={isPending}
+                    disabled={busy}
                     variant="success"
                     className="w-full justify-center"
                   >
@@ -564,14 +554,14 @@ export default function AdminTemplatesClient({ dbTemplates, unregisteredTemplate
                       <Btn
                         onClick={() => handleToggle(t.id, t.is_active)}
                         variant={t.is_active ? "ghost" : "success"}
-                        disabled={isPending}
+                        disabled={busy}
                       >
                         {t.is_active ? "Désactiver" : "Activer"}
                       </Btn>
                       <Btn
                         onClick={() => handleDelete(t.id, t.name)}
                         variant="danger"
-                        disabled={isPending}
+                        disabled={busy}
                       >
                         🗑
                       </Btn>
