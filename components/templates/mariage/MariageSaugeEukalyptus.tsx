@@ -18,6 +18,8 @@ export interface InvitationData {
   customField2Label?: string;
   customField2Value?: string;
   eventDateIso?: string | null;
+  customization?: Record<string, unknown>;
+  primaryColor?: string;
 }
 
 export interface TemplateProps {

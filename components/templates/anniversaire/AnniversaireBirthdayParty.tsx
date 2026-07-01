@@ -18,6 +18,8 @@ export interface InvitationData {
   customField2Label?: string;
   customField2Value?: string;
   eventDateIso?: string | null;
+  customization?: Record<string, unknown>;
+  primaryColor?: string;
 }
 
 export interface TemplateProps {
@@ -27,10 +29,16 @@ export interface TemplateProps {
   onConfirmParams?: (status: "accepted" | "declined", comment?: string) => Promise<void>;
 }
 
-// ─── Couleurs ─────────────────────────────────────────────────────────────────
-const PINK = "#e8547a";
-const PINK_LIGHT = "#fce8ed";
-const PINK_BORDER = "#f7c4d0";
+// ─── Couleurs — constantes module (overridables via data.primaryColor) ────────
+const DEFAULT_PINK = "#e8547a";
+const DEFAULT_PINK_LIGHT = "#fce8ed";
+const DEFAULT_PINK_BORDER = "#f7c4d0";
+
+// Couleurs actives — seront réassignées dans le composant via useThemeColor
+// On utilise des variables CSS custom pour éviter de passer partout en prop
+let PINK = DEFAULT_PINK;
+let PINK_LIGHT = DEFAULT_PINK_LIGHT;
+let PINK_BORDER = DEFAULT_PINK_BORDER;
 
 // ─── Images libres de droits Unsplash (démo quand pas de photo utilisateur) ───
 const DEMO_IMAGES = [
@@ -241,21 +249,28 @@ function Timeline({ items }: { items: TimelineItem[] }) {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 export default function AnniversaireBirthdayParty({ data, guestName, initialStatus, onConfirmParams }: TemplateProps) {
+  // Couleur principale — personnalisée ou défaut
+  PINK = (data.primaryColor as string | undefined) ?? DEFAULT_PINK;
+  PINK_LIGHT = PINK + "22";
+  PINK_BORDER = PINK + "55";
+
   const countdown = useCountdown(
     data.eventDateIso || new Date(Date.now() + 90 * 86400000).toISOString()
   );
 
-  const timelineItems: TimelineItem[] = [
-    { time: data.heure || "15:00", label: "Accueil des invités" },
-    { time: "", label: "Séance photo" },
-    {
-      time: "",
-      label: "Atelier créatif",
-      desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !",
-    },
-  ];
+  // Timeline depuis customization ou défaut
+  const customTimeline = data.customization?.timeline as Array<{time: string; label: string}> | undefined;
+  const timelineItems: TimelineItem[] = customTimeline?.length
+    ? customTimeline.map(t => ({ time: t.time, label: t.label }))
+    : [
+        { time: data.heure || "15:00", label: "Accueil des invités" },
+        { time: "", label: "Séance photo" },
+        { time: "", label: "Atelier créatif", desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !" },
+      ];
 
-  const dresscodeColors = ["#f9c8d9", "#f0a0c0", PINK, "#d44b80"];
+  // Dress code colors depuis customization ou défaut
+  const dresscodeColors = (data.customization?.dresscodeColors as string[] | undefined)
+    ?? ["#f9c8d9", "#f0a0c0", PINK, "#d44b80"];
 
   const fadeUp = (delay = 0) => ({
     hidden: { opacity: 0, y: 18 },
