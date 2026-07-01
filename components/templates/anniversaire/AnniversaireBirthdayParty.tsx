@@ -258,19 +258,26 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
     data.eventDateIso || new Date(Date.now() + 90 * 86400000).toISOString()
   );
 
-  // Timeline depuis customization ou défaut
+  // Timeline depuis customization ou défaut — avec toggle visible
+  const timelineVisible = data.customization?.timeline_visible !== false;
   const customTimeline = data.customization?.timeline as Array<{time: string; label: string}> | undefined;
-  const timelineItems: TimelineItem[] = customTimeline?.length
+  const timelineItems: TimelineItem[] = timelineVisible ? (customTimeline?.length
     ? customTimeline.map(t => ({ time: t.time, label: t.label }))
     : [
         { time: data.heure || "15:00", label: "Accueil des invités" },
         { time: "", label: "Séance photo" },
         { time: "", label: "Atelier créatif", desc: "La soirée se déroulera dans un format totalement nouveau. Nous ferons des activités à la main — quelque chose de très mignon !" },
-      ];
+      ]) : [];
 
-  // Dress code colors depuis customization ou défaut
-  const dresscodeColors = (data.customization?.dresscodeColors as string[] | undefined)
-    ?? ["#f9c8d9", "#f0a0c0", PINK, "#d44b80"];
+  // Gift text avec toggle visible
+  const giftVisible = data.customization?.giftText_visible !== false;
+  const giftText = data.customization?.giftText as string | undefined;
+
+  // Dress code colors depuis customization ou défaut — avec toggle visible
+  const dresscodeVisible = data.customization?.dresscodeColors_visible !== false;
+  const dresscodeColors = dresscodeVisible
+    ? ((data.customization?.dresscodeColors as string[] | undefined) ?? ["#f9c8d9", "#f0a0c0", PINK, "#d44b80"])
+    : null;
 
   const fadeUp = (delay = 0) => ({
     hidden: { opacity: 0, y: 18 },
@@ -356,40 +363,45 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
             <StarRow />
           </motion.div>
 
-          {/* Dress-Code */}
-          <motion.div variants={fadeUp(0.1)}>
-            <SectionTitle main="DRESS-CODE" sub="code vestimentaire" />
-            <p className="text-xs text-gray-500 leading-relaxed mb-4">
-              {data.customField1Value ||
-                "Un photographe sera présent toute la soirée. Soyez photogénique — adoptez une tenue colorée et vive, les teintes roses et joyeuses sont les bienvenues !"}
-            </p>
-            <div className="flex gap-3">
-              {dresscodeColors.map((c, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ scale: 1.15, y: -3 }}
-                  className="rounded-full shadow-sm cursor-pointer"
-                  style={{ background: c, width: 36, height: 36, flexShrink: 0 }}
-                />
-              ))}
-            </div>
-          </motion.div>
+          {/* Dress-Code — masqué si toggle désactivé */}
+          {dresscodeColors && (
+            <motion.div variants={fadeUp(0.1)}>
+              <SectionTitle main="DRESS-CODE" sub="code vestimentaire" />
+              <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                {(data.customization?.customField1Value as string | undefined) || data.customField1Value ||
+                  "Un photographe sera présent toute la soirée. Soyez photogénique — adoptez une tenue colorée et vive, les teintes roses et joyeuses sont les bienvenues !"}
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                {dresscodeColors.map((c: string, i: number) => (
+                  <motion.div
+                    key={i}
+                    whileHover={{ scale: 1.15, y: -3 }}
+                    className="rounded-full shadow-sm cursor-pointer"
+                    style={{ background: c, width: 36, height: 36, flexShrink: 0 }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
 
-          {/* Cadeau */}
-          <motion.div variants={fadeUp(0.12)}>
-            <SectionTitle main="CADEAU" sub="présent" />
-            <p className="text-xs text-gray-500 leading-relaxed">
-              {data.customField2Value ||
-                "Je sais qu'il est difficile de choisir un cadeau. Une enveloppe avec un petit mot me touchera autant que n'importe quel présent. Si vous souhaitez tout de même m'offrir quelque chose de spécial, je serai ravie de le chérir longtemps."}
-            </p>
-          </motion.div>
+          {/* Cadeau — masqué si toggle désactivé */}
+          {giftVisible && (
+            <motion.div variants={fadeUp(0.12)}>
+              <SectionTitle main="CADEAU" sub="présent" />
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {giftText || data.customField2Value ||
+                  "Je sais qu'il est difficile de choisir un cadeau. Une enveloppe avec un petit mot me touchera autant que n'importe quel présent. Si vous souhaitez tout de même m'offrir quelque chose de spécial, je serai ravie de le chérir longtemps."}
+              </p>
+            </motion.div>
+          )}
 
           {/* Grille photos 2 */}
           <motion.div variants={fadeUp(0.14)}>
             <PhotoGrid logoUrl={data.logoUrl} />
           </motion.div>
 
-          {/* Timing */}
+          {/* Timing — masqué si vide ou toggle désactivé */}
+          {timelineItems.length > 0 && (
           <motion.div variants={fadeUp(0.16)}>
             <div className="flex items-center gap-2 mb-3">
               <StarDot />
@@ -405,6 +417,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
             </div>
             <Timeline items={timelineItems} />
           </motion.div>
+          )}
 
           {/* Description */}
           {data.description && (

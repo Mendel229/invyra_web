@@ -181,6 +181,13 @@ export const TEMPLATES_REGISTRY: TemplateRegistryEntry[] = [
         required: false,
         placeholder: "https://maps.google.com/...",
       },
+      {
+        key: "images",
+        label: "Photos (jusqu'à 5)",
+        type: "imageList",
+        max: 5,
+        required: false,
+      },
     ],
     demo_images: ["hero.jpg", "polaroid-1.jpg", "polaroid-2.jpg"],
   },
