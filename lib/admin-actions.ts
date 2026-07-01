@@ -45,15 +45,16 @@ export async function updateTemplate(id: string, updates: Record<string, unknown
     "sort_order", "is_animated", "is_popular", "is_active",
     "config", "preview_url", "preview_images", "tags",
   ];
-  const filtered: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const filtered: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in updates) filtered[key] = updates[key];
   }
 
-  const { error } = await supabaseAdmin
-    .from("event_templates")
-    .update(filtered)
-    .eq("id", id);
+  // Utiliser la fonction SECURITY DEFINER qui bypasse la RLS
+  const { error } = await supabaseAdmin.rpc("admin_update_template", {
+    template_id: id,
+    updates: filtered,
+  });
 
   if (error) throw new Error(error.message);
 }

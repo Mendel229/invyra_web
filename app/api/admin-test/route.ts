@@ -8,29 +8,24 @@ export async function GET() {
     .select("id, name, config")
     .limit(2);
 
-  // Test 2 : écriture — update du config du premier template trouvé
-  let writeResult: { success: boolean; error?: string; rowsAffected?: number } = { success: false };
+  // Test 2 : écriture via RPC SECURITY DEFINER
+  let writeResult: { success: boolean; error?: string; configAfterUpdate?: unknown } = { success: false };
   if (readData && readData.length > 0) {
     const firstId = readData[0].id;
-    const { error: writeError } = await supabaseAdmin
-      .from("event_templates")
-      .update({ config: { test: true, timestamp: new Date().toISOString() } })
-      .eq("id", firstId);
+    const { error: writeError } = await supabaseAdmin.rpc("admin_update_template", {
+      template_id: firstId,
+      updates: { config: { test: true, timestamp: new Date().toISOString() } },
+    });
 
     if (writeError) {
       writeResult = { success: false, error: writeError.message };
     } else {
-      // Vérifier que l'update a bien eu lieu
       const { data: verify } = await supabaseAdmin
         .from("event_templates")
         .select("id, config")
         .eq("id", firstId)
         .single();
-      writeResult = {
-        success: true,
-        rowsAffected: 1,
-        ...({ configAfterUpdate: verify?.config } as Record<string, unknown>),
-      };
+      writeResult = { success: true, configAfterUpdate: verify?.config };
     }
   }
 
