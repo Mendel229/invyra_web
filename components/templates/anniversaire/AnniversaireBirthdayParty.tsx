@@ -467,8 +467,8 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
           </motion.div>
           )}
 
-          {/* Description */}
-          {data.description && (
+          {/* Description — masquée si vide */}
+          {data.description && data.description.trim() && (
             <motion.div
               variants={fadeUp(0.18)}
               className="rounded-2xl p-4 border"
@@ -480,24 +480,31 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
             </motion.div>
           )}
 
-          {/* Localisation */}
+          {/* Localisation — masquée si toggle désactivé */}
+          {(data.customization?.mapsUrl_visible !== false) && (
           <motion.div variants={fadeUp(0.2)}>
             <SectionTitle main="LOCALISATION" sub="lieu de la fête" />
             <p className="text-sm font-bold text-gray-800">{data.place}</p>
             {data.heure && (
               <p className="text-xs text-gray-400 mt-0.5">À partir de {data.heure}</p>
             )}
-            <motion.a
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              href="#"
-              onClick={(e) => e.preventDefault()}
-              className="mt-3 block w-full py-2.5 rounded-full text-xs font-bold text-center tracking-wider border"
-              style={{ borderColor: PINK_BORDER, color: PINK }}
-            >
-              Ouvrir sur la carte →
-            </motion.a>
+            {(data.customization?.mapsUrl as string | undefined) ? (
+              <motion.a
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                href={data.customization?.mapsUrl as string}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block w-full py-2.5 rounded-full text-xs font-bold text-center tracking-wider border"
+                style={{ borderColor: PINK_BORDER, color: PINK }}
+              >
+                Ouvrir sur la carte →
+              </motion.a>
+            ) : (
+              <p className="mt-2 text-xs text-gray-300 italic">Ajoutez un lien Maps dans la personnalisation</p>
+            )}
           </motion.div>
+          )}
 
           {/* Countdown */}
           <motion.div
