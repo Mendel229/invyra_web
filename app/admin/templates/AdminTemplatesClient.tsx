@@ -8,6 +8,7 @@ import {
   deleteTemplate,
   createTemplateManual,
 } from "@/lib/admin-actions";
+import { getDbTemplates } from "@/lib/admin-queries";
 import { TEMPLATES_BY_KEY, TemplateRegistryEntry } from "@/lib/templates-registry";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

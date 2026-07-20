@@ -1,4 +1,4 @@
-import { getDbTemplates } from "@/lib/admin-actions";
+import { getDbTemplates } from "@/lib/admin-queries";
 import { TEMPLATES_REGISTRY, TEMPLATES_BY_KEY, EVENT_TYPE_LABELS } from "@/lib/templates-registry";
 import AdminTemplatesClient from "./AdminTemplatesClient";
 
