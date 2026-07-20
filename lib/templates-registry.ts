@@ -182,6 +182,13 @@ export const TEMPLATES_REGISTRY: TemplateRegistryEntry[] = [
         placeholder: "https://maps.google.com/...",
       },
       {
+        key: "description",
+        label: "Message personnalisé (laisser vide pour masquer)",
+        type: "textarea",
+        required: false,
+        placeholder: "Venez célébrer avec nous ce moment magique...",
+      },
+      {
         key: "images",
         label: "Photos (jusqu'à 5)",
         type: "imageList",

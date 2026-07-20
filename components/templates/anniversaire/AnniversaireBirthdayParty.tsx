@@ -468,17 +468,20 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
           )}
 
           {/* Description — masquée si vide */}
-          {data.description && data.description.trim() && (
-            <motion.div
-              variants={fadeUp(0.18)}
-              className="rounded-2xl p-4 border"
-              style={{ background: PINK_LIGHT, borderColor: PINK_BORDER }}
-            >
-              <p className="text-sm italic text-gray-600 text-center leading-relaxed">
-                "{data.description}"
-              </p>
-            </motion.div>
-          )}
+          {(() => {
+            const desc = (data.customization?.description as string | undefined) || data.description;
+            return desc && desc.trim() ? (
+              <motion.div
+                variants={fadeUp(0.18)}
+                className="rounded-2xl p-4 border"
+                style={{ background: PINK_LIGHT, borderColor: PINK_BORDER }}
+              >
+                <p className="text-sm italic text-gray-600 text-center leading-relaxed">
+                  "{desc}"
+                </p>
+              </motion.div>
+            ) : null;
+          })()}
 
           {/* Localisation — masquée si toggle désactivé */}
           {(data.customization?.mapsUrl_visible !== false) && (
