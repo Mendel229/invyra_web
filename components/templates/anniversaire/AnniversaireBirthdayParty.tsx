@@ -361,7 +361,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
             <MiniCalendar dateIso={data.eventDateIso} dateLabel={data.date} />
           </motion.div>
 
-          {/* Grille photos 1 */}
+          {/* Grille photos — une seule instance */}
           <motion.div variants={fadeUp(0.08)}>
             <PhotoGrid logoUrl={data.logoUrl} customization={data.customization} />
             <StarRow />
@@ -398,11 +398,6 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
               </p>
             </motion.div>
           )}
-
-          {/* Grille photos 2 */}
-          <motion.div variants={fadeUp(0.14)}>
-            <PhotoGrid logoUrl={data.logoUrl} customization={data.customization} />
-          </motion.div>
 
           {/* Timing — masqué si vide ou toggle désactivé */}
           {timelineItems.length > 0 && (
