@@ -68,6 +68,15 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
   // QR code de démo — sans logique réelle derrière
   const demoQrCode = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=APERCU_DEMO&format=png&margin=4";
 
+  // Parser la customization depuis le query param JSON
+  let parsedCustomization: Record<string, unknown> = {};
+  const rawCustomization = sp["customization"];
+  if (typeof rawCustomization === "string" && rawCustomization) {
+    try {
+      parsedCustomization = JSON.parse(rawCustomization);
+    } catch (_) {}
+  }
+
   const previewData = {
     name: str("name", "Célébration de Démonstration"),
     event_type: currentEventType,
@@ -84,9 +93,9 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
     customField2Label: str("cf2_label", "") || undefined,
     customField2Value: str("cf2_value", "") || undefined,
     eventDateIso: (sp["event_date"] as string) || new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString(),
-    // Couleur principale depuis la customization de l'event
-    primaryColor: str("primary_color", "") || undefined,
-    customization: {},
+    // Couleur principale + customization complète
+    primaryColor: (parsedCustomization.primaryColor as string | undefined) || (str("primary_color", "") || undefined),
+    customization: parsedCustomization,
   };
 
   const guestName = "Prénom Nom (Aperçu)";
