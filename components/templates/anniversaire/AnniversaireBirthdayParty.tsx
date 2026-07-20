@@ -181,16 +181,65 @@ function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLab
   );
 }
 
-// ─── Grille photos moodboard 2×2 — utilise les images custom ou logoUrl ou démo ─
+// ─── Grille photos moodboard — s'adapte au nombre d'images disponibles ──────
 function PhotoGrid({ logoUrl, customization }: { logoUrl?: string; customization?: Record<string, unknown> }) {
-  // Priorité : images personnalisées > logoUrl > images démo
   const customImages = customization?.images as string[] | undefined;
-  const sources: string[] = customImages?.length
-    ? customImages.slice(0, 4)
+
+  // Sources : images custom > logoUrl > démo
+  const rawSources: string[] = customImages?.length
+    ? customImages
     : logoUrl
-      ? Array(4).fill(logoUrl)
+      ? [logoUrl, logoUrl, logoUrl, logoUrl]
       : DEMO_IMAGES;
 
+  const count = rawSources.length;
+  if (count === 0) return null;
+
+  // Layouts selon le nombre d'images
+  // 1 image : plein écran
+  if (count === 1) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ height: 220 }}
+      >
+        <img src={rawSources[0]} alt="" className="w-full h-full object-cover" />
+      </motion.div>
+    );
+  }
+
+  // 2 images : côte à côte
+  if (count === 2) {
+    return (
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden" style={{ height: 180 }}>
+        {rawSources.map((src, i) => (
+          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.07 }} className="overflow-hidden rounded-xl">
+            <img src={src} alt="" className="w-full h-full object-cover" />
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
+  // 3 images : grande à gauche, 2 petites à droite
+  if (count === 3) {
+    return (
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden" style={{ height: 220 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row-span-2 overflow-hidden rounded-xl">
+          <img src={rawSources[0]} alt="" className="w-full h-full object-cover" />
+        </motion.div>
+        {rawSources.slice(1).map((src, i) => (
+          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: (i + 1) * 0.07 }} className="overflow-hidden rounded-xl" style={{ height: 107 }}>
+            <img src={src} alt="" className="w-full h-full object-cover" />
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
+  // 4+ images : grille 2×2 (layout original)
   const positions = [
     { span: "col-span-2", height: "h-36" },
     { span: "col-span-1", height: "h-28" },
@@ -209,7 +258,7 @@ function PhotoGrid({ logoUrl, customization }: { logoUrl?: string; customization
           className={`${pos.span} ${pos.height} overflow-hidden rounded-xl`}
         >
           <img
-            src={sources[i]}
+            src={rawSources[i % rawSources.length]}
             alt=""
             className="w-full h-full object-cover"
             style={{ filter: i === 1 ? "brightness(0.9) saturate(1.15)" : "none" }}
