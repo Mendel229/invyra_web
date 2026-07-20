@@ -181,11 +181,15 @@ function MiniCalendar({ dateIso, dateLabel }: { dateIso?: string | null; dateLab
   );
 }
 
-// ─── Grille photos moodboard 2×2 ─────────────────────────────────────────────
-function PhotoGrid({ logoUrl }: { logoUrl?: string }) {
-  const sources = logoUrl
-    ? Array(4).fill(logoUrl)
-    : DEMO_IMAGES;
+// ─── Grille photos moodboard 2×2 — utilise les images custom ou logoUrl ou démo ─
+function PhotoGrid({ logoUrl, customization }: { logoUrl?: string; customization?: Record<string, unknown> }) {
+  // Priorité : images personnalisées > logoUrl > images démo
+  const customImages = customization?.images as string[] | undefined;
+  const sources: string[] = customImages?.length
+    ? customImages.slice(0, 4)
+    : logoUrl
+      ? Array(4).fill(logoUrl)
+      : DEMO_IMAGES;
 
   const positions = [
     { span: "col-span-2", height: "h-36" },
@@ -359,7 +363,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
 
           {/* Grille photos 1 */}
           <motion.div variants={fadeUp(0.08)}>
-            <PhotoGrid logoUrl={data.logoUrl} />
+            <PhotoGrid logoUrl={data.logoUrl} customization={data.customization} />
             <StarRow />
           </motion.div>
 
@@ -397,7 +401,7 @@ export default function AnniversaireBirthdayParty({ data, guestName, initialStat
 
           {/* Grille photos 2 */}
           <motion.div variants={fadeUp(0.14)}>
-            <PhotoGrid logoUrl={data.logoUrl} />
+            <PhotoGrid logoUrl={data.logoUrl} customization={data.customization} />
           </motion.div>
 
           {/* Timing — masqué si vide ou toggle désactivé */}
