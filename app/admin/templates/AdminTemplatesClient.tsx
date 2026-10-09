@@ -8,7 +8,7 @@ import {
   deleteTemplate,
   createTemplateManual,
 } from "@/lib/admin-actions";
-import { getDbTemplates } from "@/lib/admin-queries";
+import { logoutAdminAction } from "@/lib/admin-auth-actions";
 import { TEMPLATES_BY_KEY, TemplateRegistryEntry } from "@/lib/templates-registry";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -448,7 +448,12 @@ export default function AdminTemplatesClient({ dbTemplates, unregisteredTemplate
             <p className="text-xs text-gray-400">{templates.length} templates en base</p>
           </div>
         </div>
-        <Btn onClick={() => setEditTarget(null)}>+ Nouveau template</Btn>
+        <div className="flex items-center gap-3">
+          <Btn onClick={() => setEditTarget(null)}>+ Nouveau template</Btn>
+          <form action={logoutAdminAction}>
+            <Btn variant="ghost">Déconnexion</Btn>
+          </form>
+        </div>
       </header>
 
       <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-8">

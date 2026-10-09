@@ -33,9 +33,10 @@ export interface TemplateProps {
 const DEFAULT_GREEN = "#6b8055";
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
-function useCountdown(targetDateStr: string) {
+function useCountdown(targetDateStr?: string | null) {
   const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   useEffect(() => {
+    if (!targetDateStr) return;
     const target = new Date(targetDateStr).getTime();
     const update = () => {
       const diff = target - Date.now();
@@ -170,6 +171,13 @@ const DEMO_IMAGES = [
   "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=600&q=80",
 ];
 
+const GALLERY_POSITIONS = [
+  { span: "col-span-2", height: "h-36" },
+  { span: "col-span-1", height: "h-28" },
+  { span: "col-span-1", height: "h-28" },
+  { span: "col-span-2", height: "h-28" },
+];
+
 function PhotoGrid({ logoUrl, customization }: { logoUrl?: string; customization?: Record<string, unknown> }) {
   const customImages = customization?.images as string[] | undefined;
   const rawSources = customImages?.length ? customImages : logoUrl ? [logoUrl] : DEMO_IMAGES;
@@ -207,13 +215,15 @@ function PhotoGrid({ logoUrl, customization }: { logoUrl?: string; customization
 
   return (
     <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden">
-      {[{ span: "col-span-2", height: "h-36" }, { span: "col-span-1", height: "h-28" }, { span: "col-span-1", height: "h-28" }, { span: "col-span-2", height: "h-28" }]
-        .map((pos, i) => (
+      {rawSources.map((src, i) => {
+        const pos = GALLERY_POSITIONS[i % GALLERY_POSITIONS.length];
+        return (
           <motion.div key={i} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.07, duration: 0.45 }}
             className={`${pos.span} ${pos.height} overflow-hidden rounded-xl`}>
-            <img src={rawSources[i % rawSources.length]} alt="" className="w-full h-full object-cover" />
+            <img src={src} alt="" className="w-full h-full object-cover" />
           </motion.div>
-        ))}
+        );
+      })}
     </div>
   );
 }
@@ -244,41 +254,44 @@ function Timeline({ items, color }: { items: TimelineItem[]; color: string }) {
 // ─── Contenu invitation ───────────────────────────────────────────────────────
 function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: TemplateProps) {
   const primaryColor = (data.primaryColor as string | undefined) || DEFAULT_GREEN;
-  const countdown = useCountdown(data.eventDateIso || new Date(Date.now() + 90 * 86400000).toISOString());
+  const countdown = useCountdown(data.eventDateIso);
   const couple = data.nomCouple || data.name;
+
+  const isVisible = (key: string) => data.customization?.[`${key}_visible`] !== false;
 
   // Palette couleurs personnalisée
   const paletteColors = (data.customization?.paletteColors as string[] | undefined) ?? ["#d4c98a", "#a8bf90", "#6b8055"];
-  const paletteVisible = data.customization?.paletteColors_visible !== false;
+  const paletteVisible = isVisible("paletteColors");
 
   // Timeline
-  const timelineVisible = data.customization?.timeline_visible !== false;
+  const timelineVisible = isVisible("timeline");
   const customTimeline = data.customization?.timeline as Array<{ time: string; label: string }> | undefined;
   const timelineItems: TimelineItem[] = timelineVisible
     ? (customTimeline?.length
         ? customTimeline
         : [
             { time: data.heure || "14:00", label: "Cérémonie civile" },
-            { time: "", label: "Cérémonie religieuse" },
-            { time: "", label: "Vin d'honneur" },
-            { time: "", label: "Dîner & soirée" },
+            { time: "15:30", label: "Cérémonie religieuse" },
+            { time: "17:00", label: "Vin d'honneur" },
+            { time: "20:00", label: "Dîner & soirée" },
           ])
     : [];
 
-  // Dress code
-  const dresscodeText = data.customization?.dresscodeText as string | undefined;
-  const dresscodeVisible = data.customization?.dresscodeText_visible !== false;
+  // Dress code (avec repli vers l'ancien champ personnalisé générique)
+  const dresscodeText = (data.customization?.dresscodeText as string | undefined) || data.customField2Value;
+  const dresscodeLabel = data.customField2Label || "Tenue souhaitée";
+  const dresscodeVisible = isVisible("dresscodeText");
 
   // Maps
   const mapsUrl = data.customization?.mapsUrl as string | undefined;
-  const mapsVisible = data.customization?.mapsUrl_visible !== false;
+  const mapsVisible = isVisible("mapsUrl");
 
   // Description
   const description = (data.customization?.description as string | undefined) || data.description;
-  const descriptionVisible = data.customization?.description_visible !== false;
+  const descriptionVisible = isVisible("description");
 
   // Images galerie
-  const imagesVisible = data.customization?.images_visible !== false;
+  const imagesVisible = isVisible("images");
 
   // Guide invité personnalisé
   const guideItems = (data.customization?.guideItems as Array<{ icon: string; text: string }> | undefined) ?? [
@@ -287,7 +300,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
     { icon: "📸", text: "Montrez votre plus beau sourire" },
     { icon: "🎶", text: "Profitez de chaque instant !" },
   ];
-  const guideVisible = data.customization?.guideItems_visible !== false;
+  const guideVisible = isVisible("guideItems");
 
   const fadeUp = (delay = 0) => ({
     hidden: { opacity: 0, y: 24 },
@@ -339,29 +352,31 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         {/* ── Description / citation ── */}
         {descriptionVisible && description && description.trim() && (
           <motion.div variants={fadeUp(0.05)} className="rounded-xl p-4 text-white text-sm text-center italic shadow-md" style={{ background: primaryColor + "e8" }}>
-            "{description}"
+            &quot;{description}&quot;
           </motion.div>
         )}
 
         {/* ── Countdown ── */}
-        <motion.div variants={fadeUp(0.1)} className="text-center">
-          <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: primaryColor }}>Chaque seconde nous rapproche de notre "oui"</p>
-          <div className="flex justify-center gap-3">
-            {[{ v: countdown.days, l: "Jours" }, { v: countdown.hours, l: "Heures" }, { v: countdown.minutes, l: "Min" }, { v: countdown.seconds, l: "Sec" }]
-              .map(({ v, l }, i) => (
-                <div key={l} className="flex items-end gap-1">
-                  {i > 0 && <span className="text-xl font-bold mb-4" style={{ color: primaryColor }}>:</span>}
-                  <div className="flex flex-col items-center">
-                    <motion.span key={v} initial={{ scale: 1.15 }} animate={{ scale: 1 }}
-                      className="text-3xl font-bold tabular-nums w-10 text-center" style={{ color: "#4a5e38" }}>
-                      {String(v).padStart(2, "0")}
-                    </motion.span>
-                    <span className="text-[9px] uppercase tracking-wider" style={{ color: primaryColor }}>{l}</span>
+        {data.eventDateIso && (
+          <motion.div variants={fadeUp(0.1)} className="text-center">
+            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: primaryColor }}>Chaque seconde nous rapproche de notre &quot;oui&quot;</p>
+            <div className="flex justify-center gap-3">
+              {[{ v: countdown.days, l: "Jours" }, { v: countdown.hours, l: "Heures" }, { v: countdown.minutes, l: "Min" }, { v: countdown.seconds, l: "Sec" }]
+                .map(({ v, l }, i) => (
+                  <div key={l} className="flex items-end gap-1">
+                    {i > 0 && <span className="text-xl font-bold mb-4" style={{ color: primaryColor }}>:</span>}
+                    <div className="flex flex-col items-center">
+                      <motion.span key={v} initial={{ scale: 1.15 }} animate={{ scale: 1 }}
+                        className="text-3xl font-bold tabular-nums w-10 text-center" style={{ color: "#4a5e38" }}>
+                        {String(v).padStart(2, "0")}
+                      </motion.span>
+                      <span className="text-[9px] uppercase tracking-wider" style={{ color: primaryColor }}>{l}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-          </div>
-        </motion.div>
+                ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* ── Lieu ── */}
         {mapsVisible && (
@@ -375,6 +390,11 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
               <p className="font-serif text-xl italic" style={{ color: "#4a5e38" }}>Lieu</p>
             </div>
             <p className="font-semibold text-center" style={{ color: "#3a4a2a" }}>{data.place}</p>
+            {data.customField1Value && (
+              <p className="mt-1 text-xs text-center" style={{ color: "#7a8a6a" }}>
+                {data.customField1Label ? `${data.customField1Label} : ` : ""}{data.customField1Value}
+              </p>
+            )}
             {mapsUrl ? (
               <motion.a whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 href={mapsUrl} target="_blank" rel="noopener noreferrer"
@@ -407,7 +427,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
             </div>
             {dresscodeVisible && dresscodeText && (
               <div className="text-white text-xs px-3 py-1.5 rounded inline-block" style={{ background: primaryColor }}>
-                Tenue souhaitée : {dresscodeText}
+                {dresscodeLabel} : {dresscodeText}
               </div>
             )}
           </motion.div>
@@ -416,7 +436,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         {/* ── Dress code seul (si palette masquée) ── */}
         {!paletteVisible && dresscodeVisible && dresscodeText && (
           <motion.div variants={fadeUp(0.22)} className="bg-white rounded-2xl p-5 shadow-sm border border-[#e0dac8]">
-            <p className="font-serif text-lg italic mb-2" style={{ color: "#4a5e38" }}>Tenue souhaitée</p>
+            <p className="font-serif text-lg italic mb-2" style={{ color: "#4a5e38" }}>{dresscodeLabel}</p>
             <div className="text-white text-sm px-4 py-2 rounded-lg inline-block" style={{ background: primaryColor }}>
               {dresscodeText}
             </div>
@@ -434,7 +454,7 @@ function InvitationContent({ data, guestName, initialStatus, onConfirmParams }: 
         {/* ── Guide de l'invité ── */}
         {guideVisible && (
           <motion.div variants={fadeUp(0.28)} className="bg-white rounded-2xl p-5 shadow-sm border border-[#e0dac8]">
-            <p className="font-serif text-lg italic mb-4" style={{ color: "#4a5e38" }}>Guide de l'Invité</p>
+            <p className="font-serif text-lg italic mb-4" style={{ color: "#4a5e38" }}>Guide de l&apos;Invité</p>
             <div className="flex flex-col gap-3">
               {guideItems.map(({ icon, text }, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.08 }}

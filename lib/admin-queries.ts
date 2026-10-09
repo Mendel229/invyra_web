@@ -1,4 +1,6 @@
-// Fonctions de lecture — pas de "use server", appelables depuis Server Components directement
+// Fonctions de lecture — pas de "use server", appelables depuis Server Components directement.
+// "server-only" interdit tout import de ce module (et donc de la clé service_role) dans un bundle client.
+import "server-only";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function getDbTemplates() {

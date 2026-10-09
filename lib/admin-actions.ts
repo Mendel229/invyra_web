@@ -1,7 +1,22 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TEMPLATES_BY_KEY } from "@/lib/templates-registry";
+import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
+
+/**
+ * Garde défense-en-profondeur : le middleware protège déjà /admin/**,
+ * mais les Server Actions sont aussi des endpoints HTTP appelables
+ * directement, donc chaque mutation revérifie la session admin.
+ */
+async function requireAdmin() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+  if (!(await isValidAdminSessionToken(token))) {
+    throw new Error("Unauthorized");
+  }
+}
 
 export async function getDbTemplates() {
   const { data, error } = await supabaseAdmin
@@ -14,6 +29,8 @@ export async function getDbTemplates() {
 
 /** Crée un template depuis le registre via RPC SECURITY DEFINER */
 export async function createTemplateFromRegistry(webTemplateKey: string) {
+  await requireAdmin();
+
   const entry = TEMPLATES_BY_KEY[webTemplateKey];
   if (!entry) throw new Error("Template not found: " + webTemplateKey);
 
@@ -43,6 +60,8 @@ export async function createTemplateFromRegistry(webTemplateKey: string) {
 
 /** Met à jour un template via RPC SECURITY DEFINER */
 export async function updateTemplate(id: string, updates: Record<string, unknown>) {
+  await requireAdmin();
+
   const allowed = [
     "name", "description", "event_type", "tier", "web_template_key",
     "sort_order", "is_animated", "is_popular", "is_active",
@@ -66,6 +85,8 @@ export async function toggleTemplateActive(id: string, isActive: boolean) {
 
 /** Supprime un template via RPC SECURITY DEFINER */
 export async function deleteTemplate(id: string) {
+  await requireAdmin();
+
   const { error } = await supabaseAdmin.rpc("admin_delete_template", {
     template_id: id,
   });
@@ -84,6 +105,8 @@ export async function createTemplateManual(payload: {
   is_popular: boolean;
   config: Record<string, unknown>;
 }) {
+  await requireAdmin();
+
   const { error } = await supabaseAdmin.rpc("admin_insert_template", {
     template_data: {
       ...payload,

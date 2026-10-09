@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import RSVPSection from "@/components/RSVPSection";
 
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV !== "production") console.log(...args);
+};
+
 // Forcer le rendu dynamique — cette page ne doit jamais être mise en cache statique
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -39,13 +43,24 @@ export default async function InvitationPage({ params }: PageProps) {
     notFound();
   }
 
-  // Tracker la vue — seulement si c'est la première ouverture
+  // Tracker la vue — seulement si c'est la première ouverture.
+  // On "réclame" la transition brouillon -> vue de façon atomique (UPDATE conditionnel)
+  // pour éviter que deux requêtes concurrentes (ex. prévisualisations de liens WhatsApp/iMessage)
+  // comptent toutes les deux la première vue.
   const inv = invitationRecord!;
   const invitationId = inv.id;
   const eventId = inv.event_id;
-  const isFirstView = inv.status === "brouillon";
-  
-  console.log(`[INV] token=${token} | id=${invitationId} | status=${inv.status} | isFirstView=${isFirstView}`);
+
+  const { data: claimedRows, error: claimError } = await supabaseAdmin
+    .from("invitations")
+    .update({ status: "vue" })
+    .eq("id", invitationId)
+    .eq("status", "brouillon")
+    .select("id");
+
+  const isFirstView = !claimError && (claimedRows?.length ?? 0) > 0;
+
+  devLog(`[INV] token=${token} | id=${invitationId} | status=${inv.status} | isFirstView=${isFirstView}`);
 
   if (isFirstView) {
     const [viewInsert, statusUpdate, rpcResult] = await Promise.allSettled([
@@ -56,13 +71,13 @@ export default async function InvitationPage({ params }: PageProps) {
       }),
       supabaseAdmin.rpc("increment_invitation_viewed", { event_id_param: eventId }),
     ]);
-    console.log(`[INV] view_insert=${viewInsert.status} | status_update=${statusUpdate.status} | rpc=${rpcResult.status}`);
+    devLog(`[INV] view_insert=${viewInsert.status} | status_update=${statusUpdate.status} | rpc=${rpcResult.status}`);
     if (statusUpdate.status === "fulfilled" && (statusUpdate.value as any).error) {
       console.error(`[INV] status_update error:`, JSON.stringify((statusUpdate.value as any).error));
     }
   }
   const currentStatus = isFirstView ? "vue" : inv.status;
-  console.log(`[INV] currentStatus sent to template: ${currentStatus}`);
+  devLog(`[INV] currentStatus sent to template: ${currentStatus}`);
 
   // 2. Récupérer en parallèle : invité, QR code, et événement+template
   const [guestRes, qrRes, eventRes] = await Promise.all([
@@ -138,8 +153,8 @@ export default async function InvitationPage({ params }: PageProps) {
     "use server";
     
     const dbStatus = status === "accepted" ? "confirme" : "decline";
-    console.log(`[RSVP] invitationId=${invitationId} | userChoice=${status} | dbStatus=${dbStatus}`);
-    
+    devLog(`[RSVP] invitationId=${invitationId} | userChoice=${status} | dbStatus=${dbStatus}`);
+
     // Utiliser une fonction SECURITY DEFINER pour bypasser la RLS
     const { error: rsvpError } = await supabaseAdmin
       .rpc("update_invitation_rsvp", {
@@ -147,7 +162,7 @@ export default async function InvitationPage({ params }: PageProps) {
         new_status: dbStatus,
       });
 
-    console.log(`[RSVP] rpc result: error=${JSON.stringify(rsvpError)}`);
+    if (rsvpError) devLog(`[RSVP] rpc result: error=${JSON.stringify(rsvpError)}`);
 
     if (rsvpError) {
       console.error("[RSVP] Failed:", rsvpError.message);
