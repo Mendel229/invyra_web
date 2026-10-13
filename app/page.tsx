@@ -32,15 +32,15 @@ function FadeUp({
 function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-noir-doux/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:h-20 sm:px-8">
         <a href="#top" className="flex items-center">
-          <Image src="/invyra_full_white.png" alt="Invyra" width={377} height={100} className="h-12 w-auto" priority />
+          <Image src="/invyra_full_white.png" alt="Invyra" width={377} height={100} className="h-8 w-auto sm:h-10 lg:h-12" priority />
         </a>
         <a
           href={DOWNLOAD_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full bg-or-africain px-4 py-2 text-xs font-bold text-noir-doux transition-colors hover:bg-or-africain-alt"
+          className="inline-flex items-center gap-1.5 rounded-full bg-or-africain px-3.5 py-2 text-xs font-bold text-noir-doux transition-colors hover:bg-or-africain-alt sm:px-4"
         >
           <Download className="size-3.5" />
           Télécharger
@@ -67,31 +67,34 @@ function HeroVisual() {
         priority
       />
 
+      {/* Voile sombre au bas de l'image : garde le titre lisible quand il chevauche l'image (mobile) */}
+      <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-noir-doux to-transparent lg:hidden" />
+
       <motion.div
-        animate={{ y: [0, -8, 0] }}
+        animate={{ y: [0, -6, 0] }}
         transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute left-0 bottom-[6%] flex items-center gap-2 rounded-2xl bg-white/95 px-3.5 py-2.5 shadow-xl backdrop-blur"
+        className="absolute left-2 bottom-[44%] flex items-center gap-1.5 rounded-xl bg-white/95 px-2.5 py-2 shadow-xl backdrop-blur sm:left-0 sm:gap-2 sm:rounded-2xl sm:px-3.5 sm:py-2.5 lg:bottom-[6%]"
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-brand-success/15 text-brand-success">
-          <CheckCircle2 className="size-4" />
+        <span className="flex size-6 items-center justify-center rounded-full bg-brand-success/15 text-brand-success sm:size-7">
+          <CheckCircle2 className="size-3.5 sm:size-4" />
         </span>
         <div className="leading-none">
-          <p className="text-xs font-bold text-noir-doux">RSVP confirmé</p>
-          <p className="mt-0.5 text-[10px] text-noir-doux/50">À l&apos;instant</p>
+          <p className="text-[11px] font-bold text-noir-doux sm:text-xs">RSVP confirmé</p>
+          <p className="mt-0.5 text-[9px] text-noir-doux/50 sm:text-[10px]">À l&apos;instant</p>
         </div>
       </motion.div>
 
       <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-        className="absolute right-0 bottom-[2%] flex items-center gap-2 rounded-2xl bg-white/95 px-3.5 py-2.5 shadow-xl backdrop-blur"
+        animate={{ y: [0, 6, 0] }}
+        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-2 bottom-[28%] flex items-center gap-1.5 rounded-xl bg-white/95 px-2.5 py-2 shadow-xl backdrop-blur sm:right-0 sm:gap-2 sm:rounded-2xl sm:px-3.5 sm:py-2.5 lg:bottom-[2%]"
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-violet-royal/10 text-violet-royal">
-          <QrCode className="size-4" />
+        <span className="flex size-6 items-center justify-center rounded-full bg-violet-royal/10 text-violet-royal sm:size-7">
+          <QrCode className="size-3.5 sm:size-4" />
         </span>
         <div className="leading-none">
-          <p className="text-xs font-bold text-noir-doux">Accès scanné</p>
-          <p className="mt-0.5 text-[10px] text-noir-doux/50">Entrée validée</p>
+          <p className="text-[11px] font-bold text-noir-doux sm:text-xs">Accès scanné</p>
+          <p className="mt-0.5 text-[9px] text-noir-doux/50 sm:text-[10px]">Entrée validée</p>
         </div>
       </motion.div>
     </motion.div>
@@ -105,7 +108,7 @@ function Hero() {
       <div aria-hidden className="absolute bottom-[-80px] right-[8%] w-[320px] h-[320px] bg-or-africain/15 blur-[110px] rounded-full pointer-events-none" />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10">
-        <div className="text-center lg:text-left">
+        <div className="relative z-10 order-2 -mt-24 text-center lg:order-none lg:mt-0 lg:text-left">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,7 +145,7 @@ function Hero() {
             </a>
             <a
               href="#comment-ca-marche"
-              className="inline-flex items-center gap-1.5 rounded-full px-6 py-3.5 text-sm font-semibold text-white/80 ring-1 ring-white/15 transition-colors hover:bg-white/5 hover:text-white"
+              className="hidden items-center gap-1.5 rounded-full px-6 py-3.5 text-sm font-semibold text-white/80 ring-1 ring-white/15 transition-colors hover:bg-white/5 hover:text-white sm:inline-flex"
             >
               Comment ça marche
               <ArrowRight className="size-4" />
@@ -166,7 +169,9 @@ function Hero() {
           </motion.div>
         </div>
 
-        <HeroVisual />
+        <div className="order-1 lg:order-none">
+          <HeroVisual />
+        </div>
       </div>
     </section>
   );
