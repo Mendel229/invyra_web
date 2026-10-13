@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { loginAdminAction } from "@/lib/admin-auth-actions";
 
 export const dynamic = "force-dynamic";
@@ -10,24 +11,42 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   const { error, next } = await searchParams;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-page-bg px-4">
       <form
         action={loginAdminAction}
-        className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8 flex flex-col gap-4"
+        className="w-full max-w-sm bg-white rounded-2xl shadow-xl ring-1 ring-black/5 p-8 flex flex-col gap-4"
       >
-        <h1 className="text-xl font-bold text-gray-900">Administration Invyra</h1>
-        <p className="text-sm text-gray-500">Connectez-vous pour gérer les templates.</p>
+        <Image src="/invyra_full.png" alt="Invyra" width={184} height={80} className="h-14 w-auto" priority />
+        <div>
+          <h1 className="text-lg font-bold text-noir-doux">Administration</h1>
+          <p className="text-sm text-noir-doux/50">Connecte-toi pour gérer le backoffice.</p>
+        </div>
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            Mot de passe incorrect.
+          <p className="text-sm text-brand-error bg-brand-error/10 rounded-xl px-3 py-2">
+            Identifiants incorrects.
           </p>
         )}
 
         <input type="hidden" name="next" value={next ?? "/admin/templates"} />
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="password" className="text-sm font-medium text-gray-700">
+          <label htmlFor="username" className="text-xs font-semibold text-noir-doux/50">
+            Nom d&apos;utilisateur
+          </label>
+          <input
+            id="username"
+            type="text"
+            name="username"
+            required
+            autoFocus
+            autoComplete="username"
+            className="w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white transition-shadow"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="password" className="text-xs font-semibold text-noir-doux/50">
             Mot de passe
           </label>
           <input
@@ -35,14 +54,14 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
             type="password"
             name="password"
             required
-            autoFocus
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            autoComplete="current-password"
+            className="w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white transition-shadow"
           />
         </div>
 
         <button
           type="submit"
-          className="mt-2 w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 transition-colors"
+          className="mt-2 w-full rounded-xl bg-violet-royal hover:bg-violet-royal-alt text-white font-semibold py-2.5 text-sm transition-colors shadow-sm shadow-violet-royal/20"
         >
           Se connecter
         </button>

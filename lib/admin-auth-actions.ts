@@ -6,17 +6,25 @@ import {
   ADMIN_SESSION_COOKIE,
   constantTimeEqual,
   createAdminSessionToken,
+  verifyPassword,
 } from "@/lib/admin-auth";
 
 export async function loginAdminAction(formData: FormData) {
+  const username = String(formData.get("username") ?? "");
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/admin/templates");
   const safeNext = next.startsWith("/admin") ? next : "/admin/templates";
 
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) throw new Error("Missing env: ADMIN_PASSWORD");
+  const expectedUsername = process.env.ADMIN_USERNAME;
+  const expectedPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+  if (!expectedUsername || !expectedPasswordHash) {
+    throw new Error("Missing env: ADMIN_USERNAME / ADMIN_PASSWORD_HASH");
+  }
 
-  if (!password || !constantTimeEqual(password, expected)) {
+  const usernameOk = Boolean(username) && constantTimeEqual(username, expectedUsername);
+  const passwordOk = Boolean(password) && (await verifyPassword(password, expectedPasswordHash));
+
+  if (!usernameOk || !passwordOk) {
     redirect(`/admin/login?error=1&next=${encodeURIComponent(safeNext)}`);
   }
 

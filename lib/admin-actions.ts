@@ -116,3 +116,21 @@ export async function createTemplateManual(payload: {
   });
   if (error) throw new Error(error.message);
 }
+
+const ACCOUNT_TYPES = ["gratuit", "essentiel", "flex"] as const;
+export type AccountType = (typeof ACCOUNT_TYPES)[number];
+
+/** Change le palier d'un utilisateur (gratuit / essentiel / flex). */
+export async function updateUserAccountType(userId: string, accountType: AccountType) {
+  await requireAdmin();
+
+  if (!ACCOUNT_TYPES.includes(accountType)) {
+    throw new Error("Palier invalide: " + accountType);
+  }
+
+  const { error } = await supabaseAdmin
+    .from("users")
+    .update({ account_type: accountType })
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+}

@@ -10,6 +10,26 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Identité de marque INVYRA — mêmes valeurs que AppColors côté Flutter,
+     pour une cohérence visuelle entre l'app mobile et le site web. */
+  --color-violet-royal: #420f75;
+  --color-violet-royal-alt: #5a1e9a;
+  /* Violet très sombre (quasi noir, mais teinté violet) — pour les encarts
+     sombres du backoffice, afin d'éviter un gris/noir neutre et plat. */
+  --color-violet-nuit: #190a2e;
+  --color-or-africain: #f9b233;
+  --color-or-africain-alt: #fac040;
+  --color-beige-creme: #f6f6f6;
+  --color-beige-creme-alt: #f0ede8;
+  /* Fond du backoffice : gris-bleu très clair, pour que les cartes
+     blanches se détachent visuellement (sinon tout est blanc-sur-blanc). */
+  --color-page-bg: #eef1f7;
+  --color-noir-doux: #1f1f1f;
+  --color-brand-success: #16a34a;
+  --color-brand-warning: #f59e0b;
+  --color-brand-error: #dc2626;
+  --color-brand-info: #0ea5e9;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Palette } from "lucide-react";
 import {
   createTemplateFromRegistry,
   updateTemplate,
@@ -8,8 +9,8 @@ import {
   deleteTemplate,
   createTemplateManual,
 } from "@/lib/admin-actions";
-import { logoutAdminAction } from "@/lib/admin-auth-actions";
 import { TEMPLATES_BY_KEY, TemplateRegistryEntry } from "@/lib/templates-registry";
+import { PageHeader, Panel, EmptyState, StatusBadge } from "../components";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface DbTemplate {
@@ -43,19 +44,11 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   soiree_vip: "Soirée VIP", corporate: "Corporate", autre: "Autre",
 };
 const TIER_COLORS: Record<string, string> = {
-  gratuit: "bg-green-100 text-green-700",
-  premium: "bg-purple-100 text-purple-700",
+  gratuit: "bg-noir-doux/5 text-noir-doux/60 ring-1 ring-noir-doux/10",
+  premium: "bg-or-africain/15 text-or-africain ring-1 ring-or-africain/30",
 };
 
 // ─── Composants utilitaires ───────────────────────────────────────────────────
-function Badge({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${className}`}>
-      {children}
-    </span>
-  );
-}
-
 function Btn({
   onClick, children, variant = "default", disabled = false, className = "",
 }: {
@@ -63,12 +56,12 @@ function Btn({
   variant?: "default" | "danger" | "ghost" | "success";
   disabled?: boolean; className?: string;
 }) {
-  const base = "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "px-3.5 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = {
-    default: "bg-[#5B21B6] text-white hover:bg-[#4C1D95]",
-    danger: "bg-red-500 text-white hover:bg-red-600",
-    ghost: "bg-gray-100 text-gray-700 hover:bg-gray-200",
-    success: "bg-green-500 text-white hover:bg-green-600",
+    default: "bg-violet-royal text-white hover:bg-violet-royal-alt shadow-sm shadow-violet-royal/20",
+    danger: "bg-brand-error/10 text-brand-error hover:bg-brand-error/15",
+    ghost: "bg-noir-doux/5 text-noir-doux/70 hover:bg-noir-doux/10",
+    success: "bg-brand-success text-white hover:bg-brand-success/90 shadow-sm shadow-brand-success/20",
   };
   return (
     <button onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>
@@ -156,8 +149,8 @@ function EditPanel({
     }
   };
 
-  const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#5B21B6] bg-white";
-  const labelCls = "block text-xs font-semibold text-gray-500 mb-1";
+  const inputCls = "w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white transition-shadow";
+  const labelCls = "block text-xs font-semibold text-noir-doux/50 mb-1";
 
   // Auto-remplir depuis le registre si web_template_key est reconnu
   const handleKeyChange = (key: string) => {
@@ -189,13 +182,13 @@ function EditPanel({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className="text-lg font-bold text-noir-doux">
             {isNew ? "Nouveau template" : `Modifier — ${template?.name}`}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+          <button onClick={onClose} className="flex size-8 items-center justify-center rounded-full text-noir-doux/40 hover:bg-noir-doux/5 hover:text-noir-doux text-xl">×</button>
         </div>
 
-        {error && <p className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-brand-error bg-brand-error/10 p-2 rounded-xl">{error}</p>}
 
         {/* Clé web — avec auto-complétion registre */}
         <div>
@@ -211,7 +204,7 @@ function EditPanel({
             {Object.keys(TEMPLATES_BY_KEY).map((k) => <option key={k} value={k} />)}
           </datalist>
           {form.web_template_key && TEMPLATES_BY_KEY[form.web_template_key as string] && (
-            <p className="text-xs text-green-600 mt-1">✓ Trouvé dans le registre — champs pré-remplis</p>
+            <p className="text-xs text-brand-success mt-1">✓ Trouvé dans le registre — champs pré-remplis</p>
           )}
         </div>
 
@@ -233,7 +226,7 @@ function EditPanel({
 
         {/* Type d'événement */}
         <div>
-          <label className={labelCls}>Type d'événement *</label>
+          <label className={labelCls}>Type d&apos;événement *</label>
           <select
             value={form.event_type ?? ""}
             onChange={(e) => set("event_type", e.target.value)}
@@ -257,7 +250,7 @@ function EditPanel({
                   value={tier}
                   checked={form.tier === tier}
                   onChange={() => set("tier", tier)}
-                  className="accent-[#5B21B6]"
+                  className="accent-violet-royal"
                 />
                 <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${TIER_COLORS[tier]}`}>
                   {tier === "gratuit" ? "Gratuit" : "Premium"}
@@ -270,7 +263,7 @@ function EditPanel({
         {/* Ordre + Animé + Populaire */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className={labelCls}>Ordre d'affichage</label>
+            <label className={labelCls}>Ordre d&apos;affichage</label>
             <input
               type="number"
               value={form.sort_order ?? 0}
@@ -284,9 +277,9 @@ function EditPanel({
                 type="checkbox"
                 checked={form.is_animated ?? false}
                 onChange={(e) => set("is_animated", e.target.checked)}
-                className="accent-[#5B21B6]"
+                className="accent-violet-royal"
               />
-              <span className="text-sm text-gray-700">Animé</span>
+              <span className="text-sm text-noir-doux/70">Animé</span>
             </label>
           </div>
           <div className="flex flex-col gap-2 pt-5">
@@ -295,9 +288,9 @@ function EditPanel({
                 type="checkbox"
                 checked={form.is_popular ?? false}
                 onChange={(e) => set("is_popular", e.target.checked)}
-                className="accent-[#5B21B6]"
+                className="accent-violet-royal"
               />
-              <span className="text-sm text-gray-700">Populaire</span>
+              <span className="text-sm text-noir-doux/70">Populaire</span>
             </label>
           </div>
         </div>
@@ -309,9 +302,9 @@ function EditPanel({
               type="checkbox"
               checked={form.is_active ?? true}
               onChange={(e) => set("is_active", e.target.checked)}
-              className="accent-[#5B21B6]"
+              className="accent-violet-royal"
             />
-            <span className="text-sm font-semibold text-gray-700">Actif (visible dans l'app)</span>
+            <span className="text-sm font-semibold text-noir-doux/70">Actif (visible dans l&apos;app)</span>
           </label>
         )}
 
@@ -332,7 +325,7 @@ function EditPanel({
                   }, null, 2));
                   setJsonError("");
                 }}
-                className="text-[10px] text-[#5B21B6] hover:underline font-semibold"
+                className="text-[10px] text-violet-royal hover:underline font-semibold"
               >
                 ↺ Recharger depuis le registre
               </button>
@@ -341,10 +334,10 @@ function EditPanel({
           <textarea
             value={configJson}
             onChange={(e) => { setConfigJson(e.target.value); setJsonError(""); }}
-            className={`${inputCls} h-48 font-mono text-xs resize-y ${jsonError ? "border-red-400" : ""}`}
+            className={`${inputCls} h-48 font-mono text-xs resize-y ${jsonError ? "ring-2 ring-brand-error" : ""}`}
           />
-          {jsonError && <p className="text-red-500 text-xs mt-1">{jsonError}</p>}
-          <p className="text-gray-400 text-xs mt-1">
+          {jsonError && <p className="text-brand-error text-xs mt-1">{jsonError}</p>}
+          <p className="text-noir-doux/40 text-xs mt-1">
             Exemples de clés : defaultColors, customFields, demoImages
           </p>
         </div>
@@ -410,19 +403,17 @@ export default function AdminTemplatesClient({ dbTemplates, unregisteredTemplate
     }
   };
 
-  const grouped = EVENT_TYPES.reduce<Record<string, DbTemplate[]>>((acc, type) => {
-    acc[type] = templates.filter((t) => t.event_type === type);
-    return acc;
-  }, {});
-
-  const EVENT_TYPES_LIST = ["mariage", "anniversaire", "bapteme", "soiree_vip", "corporate", "autre"];
+  const sorted = [...templates].sort((a, b) => {
+    if (a.event_type !== b.event_type) return a.event_type.localeCompare(b.event_type);
+    return a.sort_order - b.sort_order;
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="space-y-5">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold ${
-          toast.type === "ok" ? "bg-green-500" : "bg-red-500"
+          toast.type === "ok" ? "bg-brand-success" : "bg-brand-error"
         }`}>
           {toast.msg}
         </div>
@@ -437,155 +428,130 @@ export default function AdminTemplatesClient({ dbTemplates, unregisteredTemplate
         />
       )}
 
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#5B21B6] rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-black">I</span>
+      <PageHeader
+        title="Templates"
+        subtitle={`${templates.length} template(s) en base`}
+        action={<Btn onClick={() => setEditTarget(null)}>+ Nouveau template</Btn>}
+      />
+
+      {/* ── Templates non enregistrés ── */}
+      {unregistered.length > 0 && (
+        <Panel>
+          <div className="px-5 pt-5">
+            <h2 className="text-sm font-semibold text-noir-doux">
+              Dans le code, pas encore en base ({unregistered.length})
+            </h2>
+            <p className="mt-0.5 text-xs text-noir-doux/50">
+              Ces modèles existent dans le code mais ne sont pas encore visibles dans l&apos;app.
+            </p>
           </div>
-          <div>
-            <h1 className="font-bold text-gray-900">Admin — Templates</h1>
-            <p className="text-xs text-gray-400">{templates.length} templates en base</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Btn onClick={() => setEditTarget(null)}>+ Nouveau template</Btn>
-          <form action={logoutAdminAction}>
-            <Btn variant="ghost">Déconnexion</Btn>
-          </form>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-8">
-
-        {/* ── Templates non enregistrés ── */}
-        {unregistered.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <h2 className="font-bold text-gray-800">
-                Dans le code, pas encore en base ({unregistered.length})
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {unregistered.map((t) => (
-                <div key={t.web_template_key} className="bg-white rounded-2xl border border-amber-200 p-4 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-bold text-gray-900">{t.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{t.web_template_key}</p>
-                    </div>
-                    <Badge className={TIER_COLORS[t.tier]}>{t.tier}</Badge>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed">{t.description}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-100 text-blue-700">{EVENT_TYPE_LABELS[t.event_type]}</Badge>
-                    {t.is_animated && <Badge className="bg-gray-100 text-gray-600">Animé</Badge>}
-                  </div>
-                  <Btn
-                    onClick={() => handleRegister(t.web_template_key)}
-                    disabled={busy}
-                    variant="success"
-                    className="w-full justify-center"
-                  >
-                    ↑ Enregistrer en base
-                  </Btn>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Templates en base par catégorie ── */}
-        {EVENT_TYPES_LIST.map((type) => {
-          const list = grouped[type] ?? [];
-          if (list.length === 0) return null;
-          return (
-            <section key={type}>
-              <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-[#5B21B6]" />
-                {EVENT_TYPE_LABELS[type]} ({list.length})
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {list.map((t) => (
-                  <div
-                    key={t.id}
-                    className={`bg-white rounded-2xl border p-4 flex flex-col gap-3 transition-all ${
-                      t.is_active ? "border-gray-200" : "border-gray-100 opacity-60"
-                    }`}
-                  >
-                    {/* Preview image */}
-                    {t.preview_url && (
-                      <div className="w-full h-28 rounded-xl overflow-hidden bg-gray-100">
-                        <img src={t.preview_url} alt={t.name} className="w-full h-full object-cover" />
-                      </div>
-                    )}
-
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 truncate">{t.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">{t.web_template_key ?? "—"}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <Badge className={TIER_COLORS[t.tier]}>{t.tier}</Badge>
-                        {!t.is_active && <Badge className="bg-gray-100 text-gray-400">Inactif</Badge>}
-                        {t.is_popular && <Badge className="bg-amber-100 text-amber-600">⭐ Populaire</Badge>}
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{t.description}</p>
-
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {t.is_animated && <Badge className="bg-gray-100 text-gray-600">Animé</Badge>}
-                      <Badge className="bg-gray-100 text-gray-500">#{t.sort_order}</Badge>
-                    </div>
-
-                    {/* Aperçu web */}
-                    {t.web_template_key && (
-                      <a
-                        href={`/preview/${t.web_template_key}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-[#5B21B6] hover:underline font-semibold"
-                      >
-                        👁 Voir l'aperçu →
-                      </a>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-1">
-                      <Btn onClick={() => setEditTarget(t)} variant="ghost" className="flex-1 text-center">
-                        ✏️ Modifier
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase text-noir-doux/40 border-b border-black/5">
+                  <th className="px-5 py-3 font-medium">Nom</th>
+                  <th className="px-5 py-3 font-medium">Clé web</th>
+                  <th className="px-5 py-3 font-medium">Type</th>
+                  <th className="px-5 py-3 font-medium">Offre</th>
+                  <th className="px-5 py-3 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {unregistered.map((t) => (
+                  <tr key={t.web_template_key} className="border-b border-black/5 last:border-0 hover:bg-beige-creme-alt/40">
+                    <td className="px-5 py-3 font-semibold text-noir-doux">{t.name}</td>
+                    <td className="px-5 py-3 text-noir-doux/50 font-mono text-xs">{t.web_template_key}</td>
+                    <td className="px-5 py-3 text-noir-doux/60">{EVENT_TYPE_LABELS[t.event_type]}</td>
+                    <td className="px-5 py-3"><StatusBadge status={t.tier} /></td>
+                    <td className="px-5 py-3 text-right">
+                      <Btn onClick={() => handleRegister(t.web_template_key)} disabled={busy} variant="success">
+                        Enregistrer en base
                       </Btn>
-                      <Btn
-                        onClick={() => handleToggle(t.id, t.is_active)}
-                        variant={t.is_active ? "ghost" : "success"}
-                        disabled={busy}
-                      >
-                        {t.is_active ? "Désactiver" : "Activer"}
-                      </Btn>
-                      <Btn
-                        onClick={() => handleDelete(t.id, t.name)}
-                        variant="danger"
-                        disabled={busy}
-                      >
-                        🗑
-                      </Btn>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            </section>
-          );
-        })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
 
-        {templates.length === 0 && unregistered.length === 0 && (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-lg mb-2">Aucun template</p>
-            <p className="text-sm">Créez votre premier template ou enregistrez ceux du code.</p>
+      {/* ── Templates en base ── */}
+      <Panel>
+        {sorted.length === 0 ? (
+          <EmptyState
+            icon={<Palette />}
+            title="Aucun template"
+            description="Créez votre premier template ou enregistrez ceux du code."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase text-noir-doux/40 border-b border-black/5">
+                  <th className="px-5 py-3 font-medium">Nom</th>
+                  <th className="px-5 py-3 font-medium">Type</th>
+                  <th className="px-5 py-3 font-medium">Offre</th>
+                  <th className="px-5 py-3 font-medium">Statut</th>
+                  <th className="px-5 py-3 font-medium">Ordre</th>
+                  <th className="px-5 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((t) => (
+                  <tr key={t.id} className={`border-b border-black/5 last:border-0 hover:bg-beige-creme-alt/40 ${t.is_active ? "" : "opacity-50"}`}>
+                    <td className="px-5 py-3">
+                      <p className="font-semibold text-noir-doux">
+                        {t.name}
+                        {t.is_popular && <span className="ml-1.5 text-or-africain" title="Populaire">★</span>}
+                      </p>
+                      <p className="text-xs text-noir-doux/40">{t.web_template_key ?? "—"}</p>
+                    </td>
+                    <td className="px-5 py-3 text-noir-doux/60">{EVENT_TYPE_LABELS[t.event_type]}</td>
+                    <td className="px-5 py-3"><StatusBadge status={t.tier} /></td>
+                    <td className="px-5 py-3"><StatusBadge status={t.is_active ? "actif" : "inactif"} /></td>
+                    <td className="px-5 py-3 text-noir-doux/50">#{t.sort_order}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        {t.web_template_key && (
+                          <a
+                            href={`/preview/${t.web_template_key}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-violet-royal hover:bg-violet-royal/8"
+                          >
+                            Aperçu
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setEditTarget(t)}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-noir-doux/70 hover:bg-noir-doux/5"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => handleToggle(t.id, t.is_active)}
+                          disabled={busy}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-noir-doux/70 hover:bg-noir-doux/5 disabled:opacity-50"
+                        >
+                          {t.is_active ? "Désactiver" : "Activer"}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t.id, t.name)}
+                          disabled={busy}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-brand-error hover:bg-brand-error/8 disabled:opacity-50"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }
