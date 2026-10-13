@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Download, QrCode } from "lucide-react";
@@ -30,8 +31,23 @@ function FadeUp({
 }
 
 function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-noir-doux/70 backdrop-blur-xl">
+    <header
+      className={`sticky top-0 z-40 transition-colors duration-300 ${
+        scrolled
+          ? "border-b border-white/5 bg-noir-doux/70 backdrop-blur-xl"
+          : "border-b border-transparent bg-noir-doux"
+      }`}
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:h-20 sm:px-8">
         <a href="#top" className="flex items-center">
           <Image src="/invyra_full_white.png" alt="Invyra" width={377} height={100} className="h-8 w-auto sm:h-10 lg:h-12" priority />
