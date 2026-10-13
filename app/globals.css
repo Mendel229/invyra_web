@@ -32,12 +32,10 @@
   --color-brand-info: #0ea5e9;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Pas d'adaptation au thème sombre du système : chaque page impose son propre
+   thème (fond clair pour le backoffice, fond sombre pour le site public), donc
+   le texte ne doit jamais hériter d'une couleur qui dépend des réglages OS —
+   ça rendait le texte des champs de saisie blanc-sur-blanc en mode sombre. */
 
 body {
   background: var(--background);

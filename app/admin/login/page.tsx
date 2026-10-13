@@ -16,10 +16,12 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
         action={loginAdminAction}
         className="w-full max-w-sm bg-white rounded-2xl shadow-xl ring-1 ring-black/5 p-8 flex flex-col gap-4"
       >
-        <Image src="/invyra_full.png" alt="Invyra" width={184} height={80} className="h-14 w-auto" priority />
-        <div>
-          <h1 className="text-lg font-bold text-noir-doux">Administration</h1>
-          <p className="text-sm text-noir-doux/50">Connecte-toi pour gérer le backoffice.</p>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <Image src="/invyra_full.png" alt="Invyra" width={184} height={80} className="h-9 w-auto" priority />
+          <div>
+            <h1 className="text-lg font-bold text-noir-doux">Administration</h1>
+            <p className="text-sm text-noir-doux/50">Connecte-toi pour gérer le backoffice.</p>
+          </div>
         </div>
 
         {error && (
@@ -41,7 +43,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
             required
             autoFocus
             autoComplete="username"
-            className="w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white transition-shadow"
+            className="w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white text-noir-doux transition-shadow"
           />
         </div>
 
@@ -55,7 +57,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
             name="password"
             required
             autoComplete="current-password"
-            className="w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white transition-shadow"
+            className="w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white text-noir-doux transition-shadow"
           />
         </div>
 

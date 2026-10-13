@@ -149,7 +149,7 @@ function EditPanel({
     }
   };
 
-  const inputCls = "w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white transition-shadow";
+  const inputCls = "w-full ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-royal bg-white text-noir-doux transition-shadow";
   const labelCls = "block text-xs font-semibold text-noir-doux/50 mb-1";
 
   // Auto-remplir depuis le registre si web_template_key est reconnu
